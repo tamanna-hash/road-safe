@@ -42,10 +42,10 @@ export const DEMO_USER_ID = "demo-user-001";
 export const DEMO_USER_NAME = "Demo Reporter";
 
 // ---------------------------------------------------------------------------
-// Map defaults — centred on Kuala Lumpur, Malaysia
+// Map defaults — centred on Dhaka, Bangladesh
 // ---------------------------------------------------------------------------
 
-export const MAP_DEFAULT_CENTER: [number, number] = [3.139, 101.6869];
+export const MAP_DEFAULT_CENTER: [number, number] = [23.7751, 90.3990];
 export const MAP_DEFAULT_ZOOM = 12;
 export const MAP_MIN_ZOOM = 5;
 export const MAP_MAX_ZOOM = 18;
