@@ -1,24 +1,23 @@
 "use client";
 
 /**
- * MapWrapper — Client Component that owns the map state and dynamically
- * imports LeafletMap with ssr: false.
- *
- * Per Next.js 16 rules, dynamic() with ssr:false must be called at the
- * top level of a Client Component — never inside a Server Component.
+ * MapWrapper — Client Component that owns map state, filter state,
+ * and dynamically imports LeafletMap with ssr: false.
  */
 
 import dynamic from "next/dynamic";
 import { useState, useMemo } from "react";
 import type { Report } from "@/types";
-import { useReports } from "@/hooks/use-reports";
+import { useReports, useReportFilters } from "@/hooks/use-reports";
+import { filterReports } from "@/lib/reports";
 import { ReportDetailPanel } from "@/components/map/report-detail-panel";
+import { MapFilterPanel } from "@/components/map/map-filter-panel";
+import { EmptyMapState } from "@/components/map/empty-map-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { DEMO_DISCLAIMER } from "@/lib/constants";
 
-// Dynamically import the Leaflet map — ssr: false keeps Leaflet out of the
-// server bundle entirely. Must be at top level of a Client Component.
+// ssr: false must be in a Client Component at module top level
 const LeafletMap = dynamic(
   () => import("./leaflet-map").then((mod) => mod.LeafletMap),
   {
@@ -57,18 +56,27 @@ interface MapWrapperProps {
 
 export function MapWrapper({ className }: MapWrapperProps) {
   const { reports, isLoading } = useReports();
+  const { filters, setFilters, clearFilters } = useReportFilters();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
-  // All reports shown unfiltered in Phase 05–06.
-  // Filters will be wired in Phase 07.
-  const visibleReports = useMemo(() => reports, [reports]);
+  // Apply filters reactively — recalculates when reports or filters change
+  const visibleReports = useMemo(
+    () => filterReports(reports, filters),
+    [reports, filters]
+  );
 
   const handleReportSelect = (report: Report) => {
-    // Clicking the same marker again deselects it
     setSelectedReport((prev) => (prev?.id === report.id ? null : report));
   };
 
   const handlePanelClose = () => setSelectedReport(null);
+
+  // When filters change, deselect if the currently selected report is filtered out
+  const effectiveSelectedReport =
+    selectedReport &&
+    visibleReports.some((r) => r.id === selectedReport.id)
+      ? selectedReport
+      : null;
 
   if (isLoading) {
     return (
@@ -86,25 +94,42 @@ export function MapWrapper({ className }: MapWrapperProps) {
         <span>{DEMO_DISCLAIMER}</span>
       </div>
 
-      {/* Map + detail panel container */}
-      <div className="relative flex-1 overflow-hidden" style={{ height: "calc(100% - 40px)" }}>
+      {/* Filter toolbar */}
+      <MapFilterPanel
+        filters={filters}
+        onChange={setFilters}
+        totalCount={reports.length}
+        filteredCount={visibleReports.length}
+      />
+
+      {/* Map + panels */}
+      <div
+        className="relative overflow-hidden"
+        style={{ height: "calc(100% - 40px - 44px)" }}
+      >
         {/* Map */}
         <LeafletMap
           reports={visibleReports}
-          selectedReportId={selectedReport?.id ?? null}
+          selectedReportId={effectiveSelectedReport?.id ?? null}
           onReportSelect={handleReportSelect}
           className="h-full w-full"
         />
 
-        {/* Report count badge — sits above the map */}
+        {/* Empty state overlay */}
+        {visibleReports.length === 0 && (
+          <EmptyMapState onClearFilters={clearFilters} />
+        )}
+
+        {/* Report count badge */}
         <div className="absolute bottom-6 left-3 z-[999] rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-gray-700 shadow-md backdrop-blur-sm">
-          {visibleReports.length} report{visibleReports.length !== 1 ? "s" : ""} shown
+          {visibleReports.length} of {reports.length} report
+          {reports.length !== 1 ? "s" : ""}
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-6 left-1/2 z-[999] -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-[10px] text-gray-500 shadow-md backdrop-blur-sm hidden md:flex items-center gap-3">
+        <div className="absolute bottom-6 left-1/2 z-[999] hidden -translate-x-1/2 items-center gap-3 rounded-full bg-white/90 px-3 py-1 text-[10px] text-gray-500 shadow-md backdrop-blur-sm md:flex">
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-gray-400 opacity-50 ring-1 ring-dashed ring-gray-400" />
+            <span className="size-2 rounded-full bg-gray-400 opacity-50" />
             Unverified
           </span>
           <span className="flex items-center gap-1">
@@ -119,7 +144,7 @@ export function MapWrapper({ className }: MapWrapperProps) {
 
         {/* Slide-in detail panel */}
         <ReportDetailPanel
-          report={selectedReport}
+          report={effectiveSelectedReport}
           onClose={handlePanelClose}
         />
       </div>
