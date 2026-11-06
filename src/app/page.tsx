@@ -25,6 +25,15 @@ const FEATURES = [
     color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40",
   },
   {
+    href: "/reports",
+    icon: <ClipboardList className="size-6" />,
+    title: "Browse All Reports",
+    description:
+      "Search and filter the full list of community-submitted road safety reports by status, severity, and category.",
+    cta: "View Reports",
+    color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/40",
+  },
+  {
     href: "/report",
     icon: <AlertTriangle className="size-6" />,
     title: "Report an Issue",
@@ -36,7 +45,7 @@ const FEATURES = [
   },
   {
     href: "/my-reports",
-    icon: <ClipboardList className="size-6" />,
+    icon: <LayoutDashboard className="size-6" />,
     title: "Track Your Reports",
     description:
       "Follow the progress of reports you have submitted. See when a report is verified, actioned, or resolved through a clear status timeline.",
@@ -46,7 +55,7 @@ const FEATURES = [
   },
   {
     href: "/admin",
-    icon: <LayoutDashboard className="size-6" />,
+    icon: <Shield className="size-6" />,
     title: "Admin Dashboard",
     description:
       "Review submitted reports, update statuses, and track resolution progress. Simulated admin interface — no real authentication required for this demo.",
@@ -119,11 +128,11 @@ export default function HomePage() {
             Everything you need
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Four core features working together to improve road safety awareness.
+            Five core features working together to improve road safety awareness.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {FEATURES.map(({ href, icon, title, description, cta, color }) => (
             <Link
               key={href}

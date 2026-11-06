@@ -5,7 +5,7 @@
  * Each row is expandable to reveal the StatusUpdateForm inline.
  */
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Eye } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead,
@@ -72,10 +72,9 @@ export function AdminReportTable({ reports, onStatusChange, onViewDetail }: Admi
           {reports.map((report) => {
             const isExpanded = expandedId === report.id;
             return (
-              <>
+              <React.Fragment key={report.id}>
                 {/* Main row */}
                 <TableRow
-                  key={report.id}
                   className={cn(isExpanded && "bg-muted/30 border-b-0")}
                 >
                   <TableCell className="pl-4 max-w-[200px]">
@@ -130,7 +129,7 @@ export function AdminReportTable({ reports, onStatusChange, onViewDetail }: Admi
 
                 {/* Expanded status update form */}
                 {isExpanded && (
-                  <TableRow key={`${report.id}-expand`} className="bg-muted/20 hover:bg-muted/20">
+                  <TableRow className="bg-muted/20 hover:bg-muted/20">
                     <TableCell colSpan={6} className="px-4 pb-4 pt-0">
                       <div className="max-w-sm pt-3">
                         <StatusUpdateForm
@@ -145,7 +144,7 @@ export function AdminReportTable({ reports, onStatusChange, onViewDetail }: Admi
                     </TableCell>
                   </TableRow>
                 )}
-              </>
+              </React.Fragment>
             );
           })}
         </TableBody>

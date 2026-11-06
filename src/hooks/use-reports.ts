@@ -268,9 +268,22 @@ export function useReportStats(): ReportStats {
     rejected: 0,
   });
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     setStats(getReportStats());
   }, []);
+
+  useEffect(() => {
+    loadStats();
+    window.addEventListener("roadsafe:reports-changed", loadStats);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "roadsafe_reports" || e.key === null) loadStats();
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("roadsafe:reports-changed", loadStats);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [loadStats]);
 
   return stats;
 }
