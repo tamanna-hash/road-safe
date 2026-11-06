@@ -76,12 +76,15 @@ function readFromStorage(): Report[] {
 /**
  * Persist the reports array to localStorage.
  * Silently ignores errors (e.g. private browsing quota exceeded).
+ * Dispatches a custom DOM event so same-tab components can re-sync.
  */
 function writeToStorage(reports: Report[]): void {
   if (!isBrowser()) return;
   try {
     localStorage.setItem(STORAGE_KEY_VERSION, STORAGE_DATA_VERSION);
     localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reports));
+    // Notify all useReports() instances on this tab
+    window.dispatchEvent(new CustomEvent("roadsafe:reports-changed"));
   } catch {
     // Storage quota exceeded or access denied — continue without persisting
   }

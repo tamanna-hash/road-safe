@@ -106,12 +106,36 @@ export function useReports(): UseReportsReturn {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ---- Initial load --------------------------------------------------------
+  // ---- Initial load + cross-component sync --------------------------------
+  // We listen for two events:
+  //   1. "roadsafe:reports-changed" — custom event fired by writeToStorage()
+  //      after any write in the same browser tab
+  //   2. "storage" — browser built-in event fired when localStorage changes
+  //      in a DIFFERENT tab (so the admin tab and the map tab stay in sync)
+
+  const loadReports = useCallback(() => {
+    setReports(getReports());
+  }, []);
 
   useEffect(() => {
-    setReports(getReports());
+    loadReports();
     setIsLoading(false);
-  }, []);
+
+    // Same-tab sync
+    window.addEventListener("roadsafe:reports-changed", loadReports);
+    // Cross-tab sync
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === "roadsafe_reports" || e.key === null) {
+        loadReports();
+      }
+    };
+    window.addEventListener("storage", handleStorageEvent);
+
+    return () => {
+      window.removeEventListener("roadsafe:reports-changed", loadReports);
+      window.removeEventListener("storage", handleStorageEvent);
+    };
+  }, [loadReports]);
 
   // ---- Derived state -------------------------------------------------------
 
@@ -143,27 +167,28 @@ export function useReports(): UseReportsReturn {
     }
 
     const newReport = saveReportWithImage(formData, imageUrl);
-    // Refresh state after write
-    setReports(getReports());
+    // writeToStorage already dispatched the event — loadReports will fire
+    // but we also call it directly for instant feedback
+    loadReports();
     return newReport;
-  }, []);
+  }, [loadReports]);
 
   const updateStatus = useCallback(
     (id: string, newStatus: ReportStatus, adminNote?: string): Report | undefined => {
       const updated = updateReportStatus(id, newStatus, adminNote);
-      if (updated) setReports(getReports());
+      if (updated) loadReports();
       return updated;
     },
-    []
+    [loadReports]
   );
 
   const forceUpdateStatus = useCallback(
     (id: string, newStatus: ReportStatus, adminNote?: string): Report | undefined => {
       const updated = forceUpdateReportStatus(id, newStatus, adminNote);
-      if (updated) setReports(getReports());
+      if (updated) loadReports();
       return updated;
     },
-    []
+    [loadReports]
   );
 
   const applyFilters = useCallback(
@@ -177,12 +202,13 @@ export function useReports(): UseReportsReturn {
   );
 
   const reset = useCallback(() => {
-    setReports(resetToSeedData());
-  }, []);
+    resetToSeedData();
+    loadReports();
+  }, [loadReports]);
 
   const refresh = useCallback(() => {
-    setReports(getReports());
-  }, []);
+    loadReports();
+  }, [loadReports]);
 
   return {
     reports,
@@ -257,14 +283,29 @@ export function useMyReports() {
   const [myReports, setMyReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const loadMyReports = useCallback(() => {
     setMyReports(getMyReports());
-    setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    loadMyReports();
+    setIsLoading(false);
+
+    window.addEventListener("roadsafe:reports-changed", loadMyReports);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "roadsafe_reports" || e.key === null) loadMyReports();
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("roadsafe:reports-changed", loadMyReports);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [loadMyReports]);
+
   const refresh = useCallback(() => {
-    setMyReports(getMyReports());
-  }, []);
+    loadMyReports();
+  }, [loadMyReports]);
 
   return { myReports, isLoading, refresh };
 }
