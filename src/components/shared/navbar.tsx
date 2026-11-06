@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, MapPin, AlertTriangle, ClipboardList, LayoutDashboard, Shield } from "lucide-react";
+import { Menu, MapPin, AlertTriangle, ClipboardList, LayoutDashboard, List, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -30,6 +30,11 @@ const NAV_LINKS: NavLink[] = [
     href: "/explore",
     label: "Explore Map",
     icon: <MapPin className="size-4" />,
+  },
+  {
+    href: "/reports",
+    label: "Reports",
+    icon: <List className="size-4" />,
   },
   {
     href: "/report",

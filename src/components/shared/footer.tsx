@@ -38,6 +38,7 @@ export function Footer() {
             <p className="font-medium text-foreground">Quick Links</p>
             {[
               { href: "/explore", label: "Explore Map" },
+              { href: "/reports", label: "All Reports" },
               { href: "/report", label: "Report an Issue" },
               { href: "/my-reports", label: "My Reports" },
               { href: "/admin", label: "Admin Dashboard" },
