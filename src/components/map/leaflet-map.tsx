@@ -1,20 +1,16 @@
 "use client";
 
 /**
- * LeafletMap — the core interactive map component.
- *
- * This component must only be rendered on the client (no SSR).
- * It is imported via MapWrapper which uses next/dynamic with ssr: false.
- *
- * Leaflet CSS is imported here so it is only bundled for the client.
+ * LeafletMap — core interactive map component.
+ * Must only be rendered client-side (imported via MapWrapper with ssr:false).
  */
 
 import "leaflet/dist/leaflet.css";
 
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import type { Report } from "@/types";
+import type { Report, Severity as SeverityType } from "@/types";
 import {
   MAP_DEFAULT_CENTER,
   MAP_DEFAULT_ZOOM,
@@ -25,41 +21,74 @@ import {
   CATEGORY_MARKER_COLORS,
   SEVERITY_LABELS,
   CATEGORY_LABELS,
-  STATUS_LABELS,
-  STATUS_COLORS,
 } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Custom SVG marker icon factory
-// Using divIcon with SVG avoids the webpack/turbopack default-icon path bug.
+// Marker sizing — severity determines pin size
 // ---------------------------------------------------------------------------
 
-function createMarkerIcon(color: string, isSelected: boolean): L.DivIcon {
-  const size = isSelected ? 36 : 28;
-  const borderWidth = isSelected ? 3 : 2;
-  const shadow = isSelected
-    ? `drop-shadow(0 2px 6px rgba(0,0,0,0.5))`
-    : `drop-shadow(0 1px 3px rgba(0,0,0,0.35))`;
+const SEVERITY_SIZES: Record<SeverityType, number> = {
+  LOW: 24,
+  MEDIUM: 28,
+  HIGH: 32,
+  CRITICAL: 38,
+};
 
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="${size}" height="${Math.round(size * 1.33)}">
-      <path d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 16 8 16s8-10.75 8-16c0-4.42-3.58-8-8-8z"
-        fill="${color}"
-        stroke="white"
-        stroke-width="${borderWidth}"
-        style="filter:${shadow}"
-      />
-      <circle cx="12" cy="8" r="3.5" fill="white" opacity="0.9"/>
-    </svg>
-  `;
+// ---------------------------------------------------------------------------
+// SVG marker icon factory
+// Visual language:
+//   Verified (VERIFIED / IN_PROGRESS / RESOLVED) → solid white ring, full opacity
+//   Pending  → dashed white ring, slightly reduced opacity
+//   Rejected → grey fill, dashed ring, low opacity
+// ---------------------------------------------------------------------------
+
+function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
+  const isVerified =
+    report.status === "VERIFIED" ||
+    report.status === "IN_PROGRESS" ||
+    report.status === "RESOLVED";
+  const isRejected = report.status === "REJECTED";
+
+  const baseSize = SEVERITY_SIZES[report.severity];
+  const size = isSelected ? baseSize + 8 : baseSize;
+  const height = Math.round(size * 1.35);
+
+  // Rejected markers are greyed out
+  const fill = isRejected ? "#9ca3af" : CATEGORY_MARKER_COLORS[report.category];
+
+  // Ring style — solid for verified, dashed for unverified/pending
+  const strokeDasharray = isVerified ? "none" : "3 2";
+  const outerOpacity = isRejected ? 0.45 : isVerified ? 1 : 0.8;
+
+  // Selected ring — bright blue outline
+  const selectionRing = isSelected
+    ? `<circle cx="12" cy="8" r="10.5" fill="none" stroke="#3b82f6" stroke-width="2.5" opacity="0.9"/>`
+    : "";
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="${size}" height="${height}" style="opacity:${outerOpacity}">
+  ${selectionRing}
+  <path d="M12 1C7.03 1 3 5.03 3 10c0 6.25 9 19 9 19s9-12.75 9-19c0-4.97-4.03-9-9-9z"
+    fill="${fill}"
+    stroke="white"
+    stroke-width="1.8"
+    stroke-dasharray="${strokeDasharray}"
+  />
+  <circle cx="12" cy="10" r="3.8" fill="white" opacity="0.9"/>
+  ${
+    report.severity === "CRITICAL"
+      ? `<text x="12" y="14" text-anchor="middle" font-size="5" font-weight="bold" fill="${fill}">!</text>`
+      : ""
+  }
+</svg>`;
 
   return L.divIcon({
     html: svg,
-    className: "",          // prevents Leaflet adding its own white box class
-    iconSize: [size, Math.round(size * 1.33)],
-    iconAnchor: [size / 2, Math.round(size * 1.33)],
-    popupAnchor: [0, -Math.round(size * 1.33)],
+    className: "",
+    iconSize: [size, height],
+    iconAnchor: [size / 2, height],
+    popupAnchor: [0, -height],
+    tooltipAnchor: [size / 2, -(height / 2)],
   });
 }
 
@@ -86,7 +115,7 @@ export function LeafletMap({
 }: LeafletMapProps) {
   const mapRef = useRef<L.Map | null>(null);
 
-  // Pan to selected report when it changes
+  // Pan to selected report
   useEffect(() => {
     if (!selectedReportId || !mapRef.current) return;
     const report = reports.find((r) => r.id === selectedReportId);
@@ -107,17 +136,13 @@ export function LeafletMap({
       minZoom={MAP_MIN_ZOOM}
       maxZoom={MAP_MAX_ZOOM}
       className={cn("h-full w-full", className)}
-      // Prevents the map stealing keyboard focus from the rest of the page
       keyboard={false}
     >
-      {/* OpenStreetMap tile layer */}
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
 
-      {/* Report markers */}
       {reports.map((report) => {
-        const color = CATEGORY_MARKER_COLORS[report.category];
         const isSelected = report.id === selectedReportId;
-        const icon = createMarkerIcon(color, isSelected);
+        const icon = createMarkerIcon(report, isSelected);
 
         return (
           <Marker
@@ -129,23 +154,14 @@ export function LeafletMap({
               click: () => onReportSelect?.(report),
             }}
           >
-            {/* Tooltip — shown on hover */}
-            <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
-              <div className="min-w-[160px]">
-                <p className="font-semibold text-gray-900">{report.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {CATEGORY_LABELS[report.category]} · {SEVERITY_LABELS[report.severity]}
-                </p>
-              </div>
-            </Tooltip>
-
-            {/* Popup — shown on click */}
-            <Popup
-              maxWidth={280}
-              className="roadsafe-popup"
+            <Tooltip
+              direction="top"
+              offset={[0, -4]}
+              opacity={0.97}
+              permanent={false}
             >
-              <PopupContent report={report} onViewDetail={onReportSelect} />
-            </Popup>
+              <TooltipContent report={report} />
+            </Tooltip>
           </Marker>
         );
       })}
@@ -154,66 +170,41 @@ export function LeafletMap({
 }
 
 // ---------------------------------------------------------------------------
-// Popup content component
+// Tooltip content (hover)
 // ---------------------------------------------------------------------------
 
-function PopupContent({
-  report,
-  onViewDetail,
-}: {
-  report: Report;
-  onViewDetail?: (report: Report) => void;
-}) {
-  const statusColor = STATUS_COLORS[report.status];
+function TooltipContent({ report }: { report: Report }) {
+  const isVerified =
+    report.status === "VERIFIED" ||
+    report.status === "IN_PROGRESS" ||
+    report.status === "RESOLVED";
 
   return (
-    <div className="min-w-[220px] p-1 font-sans text-sm">
-      {/* Title */}
-      <p className="font-semibold text-gray-900 leading-snug mb-2">
-        {report.title}
-      </p>
-
-      {/* Meta row */}
-      <div className="flex flex-wrap gap-1 mb-2">
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-          {CATEGORY_LABELS[report.category]}
-        </span>
-        <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
+    <div className="min-w-[180px] max-w-[240px]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold text-gray-900 text-xs leading-snug">
+          {report.title}
+        </p>
+        {isVerified && (
+          <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">
+            ✓ Verified
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-[11px] text-gray-500">
+        {CATEGORY_LABELS[report.category]} ·{" "}
+        <span className={
+          report.severity === "CRITICAL" ? "font-semibold text-red-600" :
+          report.severity === "HIGH" ? "text-orange-600" :
+          "text-gray-500"
+        }>
           {SEVERITY_LABELS[report.severity]}
         </span>
-        <span className={cn(
-          "inline-flex items-center rounded-full px-2 py-0.5 text-xs",
-          statusColor
-        )}>
-          {STATUS_LABELS[report.status]}
-        </span>
-      </div>
-
-      {/* Address */}
+      </p>
       {report.location.address && (
-        <p className="text-xs text-gray-500 mb-2 leading-snug">
+        <p className="mt-0.5 text-[10px] text-gray-400 truncate">
           📍 {report.location.address}
         </p>
-      )}
-
-      {/* Description preview */}
-      <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-3">
-        {report.description}
-      </p>
-
-      {/* Demo disclaimer */}
-      <p className="text-[10px] text-gray-400 italic mb-2">
-        Sample data — not official statistics
-      </p>
-
-      {/* View detail button */}
-      {onViewDetail && (
-        <button
-          onClick={() => onViewDetail(report)}
-          className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
-        >
-          View Details
-        </button>
       )}
     </div>
   );
