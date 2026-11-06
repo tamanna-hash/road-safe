@@ -118,41 +118,6 @@ export function getMyReports(): Report[] {
 }
 
 /**
- * Save a new report built from form data.
- * Assigns a unique ID, sets status to PENDING, and records the submission time.
- *
- * Returns the newly created Report.
- */
-export function saveReport(formData: ReportFormData): Report {
-  const reports = readFromStorage();
-
-  const newReport: Report = {
-    id: crypto.randomUUID(),
-    title: formData.title,
-    description: formData.description,
-    location: formData.location,
-    category: formData.category,
-    severity: formData.severity,
-    status: ReportStatus.PENDING,
-    submittedAt: new Date().toISOString(),
-    submittedBy: DEMO_USER_ID,
-    // Convert File to a data URL if provided — stored as base64 for localStorage demo
-    imageUrl: undefined,
-  };
-
-  // Image handling: if a File was provided, the caller is responsible for
-  // converting it to a data URL before passing here, or we store undefined.
-  // See useReports hook for the async conversion helper.
-  if (formData.imageFile === undefined) {
-    // No image — leave imageUrl undefined
-  }
-
-  const updated = [newReport, ...reports];
-  writeToStorage(updated);
-  return newReport;
-}
-
-/**
  * Save a new report that already has an imageUrl (base64 data URL).
  * Use this variant when the calling code has already converted the File.
  */

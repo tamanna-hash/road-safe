@@ -103,10 +103,7 @@ export function MapWrapper({ className }: MapWrapperProps) {
       />
 
       {/* Map + panels */}
-      <div
-        className="relative overflow-hidden"
-        style={{ height: "calc(100% - 40px - 44px)" }}
-      >
+      <div className="relative flex-1 overflow-hidden">
         {/* Map */}
         <LeafletMap
           reports={visibleReports}

@@ -128,3 +128,38 @@
     @apply font-sans;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Accessibility improvements
+   --------------------------------------------------------------------------- */
+
+/* Ensure focus-visible is always clearly visible for keyboard users */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Smoother scrolling for in-page anchor links (e.g. skip-to-content) */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Respect user's motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Leaflet map accessibility — ensure map container is reachable by keyboard */
+.leaflet-container:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

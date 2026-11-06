@@ -10,17 +10,15 @@ export const metadata: Metadata = {
 /**
  * Explore page — Interactive road risk map.
  *
- * This page is a Server Component. The map itself is loaded client-side
- * only via MapWrapper → dynamic(LeafletMap, { ssr: false }).
- *
- * NOTE: All data shown is community-submitted sample data for demonstration
- * purposes. Not official accident statistics.
+ * Uses flex layout so the map fills all remaining viewport height without
+ * relying on hard-coded pixel calculations. The root layout's <main> is
+ * already flex-col flex-1, so this page just needs to be flex-col flex-1
+ * as well and the map will grow to fill everything below the navbar.
  */
 export default function ExplorePage() {
   return (
-    // Full viewport height minus the navbar (56px = h-14)
-    <div className="flex h-[calc(100vh-56px)] flex-col overflow-hidden">
-      <MapWrapper className="flex h-full flex-col" />
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <MapWrapper className="flex flex-1 flex-col overflow-hidden" />
     </div>
   );
 }
