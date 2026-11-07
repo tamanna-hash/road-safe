@@ -46,3 +46,10 @@ PROMPT.md
 agent-instructions.md
 .kiro/
 *.agent.md
+
+# Documentation (local only)
+ROADSAFE_COMPLETE_GUIDE.md
+
+
+
+.vercel

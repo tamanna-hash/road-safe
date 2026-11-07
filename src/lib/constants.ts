@@ -80,7 +80,7 @@ export const TILE_ATTRIBUTION =
 
 export const STORAGE_KEY_REPORTS = "roadsafe_reports";
 export const STORAGE_KEY_VERSION = "roadsafe_data_version";
-export const STORAGE_DATA_VERSION = "1";
+export const STORAGE_DATA_VERSION = "2"; // bumped: added district field to all reports
 
 // ---------------------------------------------------------------------------
 // Report category labels & colours

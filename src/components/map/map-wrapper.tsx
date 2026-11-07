@@ -1,12 +1,5 @@
 "use client";
-// 'use no memo' — opt out of React Compiler for this component.
-// This wrapper manages the Leaflet dynamic import and must not be
-// pre-executed or memoised by the compiler.
-
-/**
- * MapWrapper — Client Component that owns map state, filter state,
- * and dynamically imports LeafletMap with ssr: false.
- */
+"use no memo";
 
 import dynamic from "next/dynamic";
 import { useState, useMemo } from "react";
@@ -20,17 +13,29 @@ import { EmptyMapState } from "@/components/map/empty-map-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 
+// Static loading fallback — NO hooks allowed here (runs during SSR)
+function MapLoadingFallback() {
+  return (
+    <div className="relative flex h-full w-full items-center justify-center bg-muted/30">
+      <Skeleton className="absolute inset-0 rounded-none" />
+      <div className="relative z-10 flex flex-col items-center gap-2">
+        <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    </div>
+  );
+}
+
 // ssr: false must be in a Client Component at module top level
 const LeafletMap = dynamic(
   () => import("./leaflet-map").then((mod) => mod.LeafletMap),
   {
     ssr: false,
-    loading: () => <MapLoadingSkeleton />,
+    loading: () => <MapLoadingFallback />,
   }
 );
 
 // ---------------------------------------------------------------------------
-// Loading skeleton
+// Loading skeleton (client-side only — safe to use hooks)
 // ---------------------------------------------------------------------------
 
 function MapLoadingSkeleton() {
@@ -77,7 +82,6 @@ export function MapWrapper({ className }: MapWrapperProps) {
       </div>
     );
   }
-
   return (
     <div className={`${className ?? ""} h-full`}>
       {/* Demo disclaimer banner */}
