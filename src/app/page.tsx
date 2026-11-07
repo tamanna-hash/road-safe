@@ -7,6 +7,7 @@ import {
   CheckCircle2, Users, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Footer } from "@/components/shared/footer";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function HomePage() {
@@ -22,7 +23,7 @@ export default function HomePage() {
   ] as const;
 
   const STATS = [
-    { icon: <Users className="size-5 text-primary" />, value: "12+", label: h.stats.sampleReports },
+    { icon: <Users className="size-5 text-primary" />, value: "82", label: h.stats.sampleReports },
     { icon: <TrendingUp className="size-5 text-primary" />, value: "8", label: h.stats.categories },
     { icon: <CheckCircle2 className="size-5 text-primary" />, value: "5", label: h.stats.statusStages },
   ];
@@ -34,7 +35,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col flex-1">
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-b from-primary/5 via-background to-background">
@@ -149,6 +150,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Footer />
     </div>
   );
 }

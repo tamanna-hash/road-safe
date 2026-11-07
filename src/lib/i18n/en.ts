@@ -35,7 +35,7 @@ export const en = {
       demoNote: "Frontend demonstration · Data stored in browser localStorage · No server required",
     },
     stats: {
-      sampleReports: "Sample Reports",
+      sampleReports: "Demo Reports",
       categories: "Categories",
       statusStages: "Status Stages",
     },
@@ -76,6 +76,7 @@ export const en = {
     filtersLabel: "Filters",
     category: "Category",
     severity: "Severity",
+    district: "District",
     verification: "Verification",
     verifiedOnly: "✓ Verified only",
     clearAll: "Clear",

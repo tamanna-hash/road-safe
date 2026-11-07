@@ -29,10 +29,25 @@ import {
   TILE_URL,
   TILE_ATTRIBUTION,
   CATEGORY_MARKER_COLORS,
-  SEVERITY_LABELS,
-  CATEGORY_LABELS,
 } from "@/lib/constants";
+import { useLocalizedReport } from "@/hooks/use-localized-report";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { cn } from "@/lib/utils";
+
+// Ensure Leaflet tooltips always float above all markers
+const TOOLTIP_Z_INDEX_STYLE = `
+  .leaflet-tooltip {
+    z-index: 9000 !important;
+    pointer-events: none;
+    max-width: 240px !important;
+    overflow: hidden !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  .leaflet-tooltip-pane {
+    z-index: 9000 !important;
+  }
+`;
 
 // ---------------------------------------------------------------------------
 // Marker sizing
@@ -145,46 +160,56 @@ export function LeafletMap({
   }
 
   return (
-    <MapContainer
-      ref={mapRef}
-      center={MAP_DEFAULT_CENTER}
-      zoom={MAP_DEFAULT_ZOOM}
-      minZoom={MAP_MIN_ZOOM}
-      maxZoom={MAP_MAX_ZOOM}
-      maxBounds={MAP_MAX_BOUNDS}
-      maxBoundsViscosity={1.0}
-      className={cn("h-full w-full", className)}
-      keyboard={false}
-    >
-      {/* OpenStreetMap tile layer — restricted to Bangladesh */}
-      <TileLayer
-        url={TILE_URL}
-        attribution={TILE_ATTRIBUTION}
-        bounds={MAP_TILE_BOUNDS}
-        noWrap={true}
-      />
+    <>
+      {/* Inject tooltip z-index fix */}
+      <style>{TOOLTIP_Z_INDEX_STYLE}</style>
+      <MapContainer
+        ref={mapRef}
+        center={MAP_DEFAULT_CENTER}
+        zoom={MAP_DEFAULT_ZOOM}
+        minZoom={MAP_MIN_ZOOM}
+        maxZoom={MAP_MAX_ZOOM}
+        maxBounds={MAP_MAX_BOUNDS}
+        maxBoundsViscosity={1.0}
+        className={cn("h-full w-full", className)}
+        keyboard={false}
+      >
+        {/* OpenStreetMap tile layer — restricted to Bangladesh */}
+        <TileLayer
+          url={TILE_URL}
+          attribution={TILE_ATTRIBUTION}
+          bounds={MAP_TILE_BOUNDS}
+          noWrap={true}
+        />
 
-      {reports.map((report) => {
-        const isSelected = report.id === selectedReportId;
-        const icon = createMarkerIcon(LModule, report, isSelected);
+        {reports.map((report) => {
+          const isSelected = report.id === selectedReportId;
+          const icon = createMarkerIcon(LModule, report, isSelected);
 
-        return (
-          <Marker
-            key={report.id}
-            position={[report.location.lat, report.location.lng]}
-            icon={icon}
-            zIndexOffset={isSelected ? 1000 : 0}
-            eventHandlers={{
-              click: () => onReportSelect?.(report),
-            }}
-          >
-            <Tooltip direction="top" offset={[0, -4]} opacity={0.97}>
-              <TooltipContent report={report} />
-            </Tooltip>
-          </Marker>
-        );
-      })}
-    </MapContainer>
+          return (
+            <Marker
+              key={report.id}
+              position={[report.location.lat, report.location.lng]}
+              icon={icon}
+              zIndexOffset={isSelected ? 1000 : 0}
+              eventHandlers={{
+                click: () => onReportSelect?.(report),
+              }}
+            >
+              <Tooltip
+                direction="top"
+                offset={[0, -8]}
+                opacity={1}
+                sticky={false}
+                className="leaflet-tooltip-custom"
+              >
+                <TooltipContent report={report} />
+              </Tooltip>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </>
   );
 }
 
@@ -193,36 +218,39 @@ export function LeafletMap({
 // ---------------------------------------------------------------------------
 
 function TooltipContent({ report }: { report: Report }) {
+  const { t } = useLanguage();
+  const { title, address } = useLocalizedReport(report);
+
   const isVerified =
     report.status === "VERIFIED" ||
     report.status === "IN_PROGRESS" ||
     report.status === "RESOLVED";
 
   return (
-    <div className="min-w-[180px] max-w-[240px]">
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-semibold text-gray-900 text-xs leading-snug">
-          {report.title}
+    <div className="w-56 max-w-[224px] overflow-hidden">
+      <div className="flex items-start gap-2">
+        <p className="flex-1 min-w-0 font-semibold text-gray-900 text-xs leading-snug break-words">
+          {title}
         </p>
         {isVerified && (
-          <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">
-            ✓ Verified
+          <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 whitespace-nowrap">
+            ✓ {t.status.VERIFIED}
           </span>
         )}
       </div>
-      <p className="mt-1 text-[11px] text-gray-500">
-        {CATEGORY_LABELS[report.category]} ·{" "}
+      <p className="mt-1 text-[11px] text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
+        {t.category[report.category]} ·{" "}
         <span className={
           report.severity === "CRITICAL" ? "font-semibold text-red-600" :
           report.severity === "HIGH" ? "text-orange-600" :
           "text-gray-500"
         }>
-          {SEVERITY_LABELS[report.severity]}
+          {t.severity[report.severity]}
         </span>
       </p>
-      {report.location.address && (
-        <p className="mt-0.5 text-[10px] text-gray-400 truncate">
-          📍 {report.location.address}
+      {address && (
+        <p className="mt-0.5 text-[10px] text-gray-400 overflow-hidden text-ellipsis whitespace-nowrap">
+          📍 {address}
         </p>
       )}
     </div>

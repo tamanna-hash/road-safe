@@ -205,3 +205,94 @@ export const VALID_STATUS_TRANSITIONS: Record<ReportStatusType, ReportStatusType
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_PAGE_SIZE = 10;
+
+// ---------------------------------------------------------------------------
+// Districts — all 64 districts of Bangladesh
+// Each entry: { en, bn, division }
+// ---------------------------------------------------------------------------
+
+export interface DistrictInfo {
+  en: string;
+  bn: string;
+  division: string;
+}
+
+export const DISTRICTS: DistrictInfo[] = [
+  // Dhaka Division
+  { en: "Dhaka",        bn: "ঢাকা",        division: "Dhaka" },
+  { en: "Gazipur",      bn: "গাজীপুর",     division: "Dhaka" },
+  { en: "Narayanganj",  bn: "নারায়ণগঞ্জ",  division: "Dhaka" },
+  { en: "Munshiganj",   bn: "মুন্সীগঞ্জ",  division: "Dhaka" },
+  { en: "Manikganj",    bn: "মানিকগঞ্জ",   division: "Dhaka" },
+  { en: "Narsingdi",    bn: "নরসিংদী",     division: "Dhaka" },
+  { en: "Kishoreganj",  bn: "কিশোরগঞ্জ",   division: "Dhaka" },
+  { en: "Tangail",      bn: "টাঙ্গাইল",    division: "Dhaka" },
+  { en: "Gopalganj",    bn: "গোপালগঞ্জ",   division: "Dhaka" },
+  { en: "Madaripur",    bn: "মাদারীপুর",   division: "Dhaka" },
+  { en: "Shariatpur",   bn: "শরীয়তপুর",   division: "Dhaka" },
+  { en: "Faridpur",     bn: "ফরিদপুর",     division: "Dhaka" },
+  { en: "Rajbari",      bn: "রাজবাড়ী",    division: "Dhaka" },
+  // Mymensingh Division
+  { en: "Mymensingh",   bn: "ময়মনসিংহ",   division: "Mymensingh" },
+  { en: "Jamalpur",     bn: "জামালপুর",    division: "Mymensingh" },
+  { en: "Sherpur",      bn: "শেরপুর",      division: "Mymensingh" },
+  { en: "Netrokona",    bn: "নেত্রকোনা",   division: "Mymensingh" },
+  // Chittagong Division
+  { en: "Chattogram",   bn: "চট্টগ্রাম",   division: "Chittagong" },
+  { en: "Cox's Bazar",  bn: "কক্সবাজার",   division: "Chittagong" },
+  { en: "Bandarban",    bn: "বান্দরবান",   division: "Chittagong" },
+  { en: "Rangamati",    bn: "রাঙামাটি",    division: "Chittagong" },
+  { en: "Khagrachhari", bn: "খাগড়াছড়ি",  division: "Chittagong" },
+  { en: "Feni",         bn: "ফেনী",        division: "Chittagong" },
+  { en: "Noakhali",     bn: "নোয়াখালী",   division: "Chittagong" },
+  { en: "Lakshmipur",   bn: "লক্ষ্মীপুর", division: "Chittagong" },
+  { en: "Chandpur",     bn: "চাঁদপুর",    division: "Chittagong" },
+  { en: "Cumilla",      bn: "কুমিল্লা",   division: "Chittagong" },
+  { en: "Brahmanbaria", bn: "ব্রাহ্মণবাড়িয়া", division: "Chittagong" },
+  // Sylhet Division
+  { en: "Sylhet",       bn: "সিলেট",      division: "Sylhet" },
+  { en: "Habiganj",     bn: "হবিগঞ্জ",    division: "Sylhet" },
+  { en: "Moulvibazar",  bn: "মৌলভীবাজার", division: "Sylhet" },
+  { en: "Sunamganj",    bn: "সুনামগঞ্জ",  division: "Sylhet" },
+  // Rajshahi Division
+  { en: "Rajshahi",     bn: "রাজশাহী",    division: "Rajshahi" },
+  { en: "Chapai Nawabganj", bn: "চাঁপাই নবাবগঞ্জ", division: "Rajshahi" },
+  { en: "Natore",       bn: "নাটোর",      division: "Rajshahi" },
+  { en: "Bogura",       bn: "বগুড়া",      division: "Rajshahi" },
+  { en: "Joypurhat",    bn: "জয়পুরহাট",  division: "Rajshahi" },
+  { en: "Naogaon",      bn: "নওগাঁ",      division: "Rajshahi" },
+  { en: "Sirajganj",    bn: "সিরাজগঞ্জ",  division: "Rajshahi" },
+  { en: "Pabna",        bn: "পাবনা",      division: "Rajshahi" },
+  // Rangpur Division
+  { en: "Rangpur",      bn: "রংপুর",      division: "Rangpur" },
+  { en: "Dinajpur",     bn: "দিনাজপুর",   division: "Rangpur" },
+  { en: "Thakurgaon",   bn: "ঠাকুরগাঁও",  division: "Rangpur" },
+  { en: "Panchagarh",   bn: "পঞ্চগড়",    division: "Rangpur" },
+  { en: "Nilphamari",   bn: "নীলফামারী",  division: "Rangpur" },
+  { en: "Lalmonirhat",  bn: "লালমনিরহাট", division: "Rangpur" },
+  { en: "Gaibandha",    bn: "গাইবান্ধা",  division: "Rangpur" },
+  { en: "Kurigram",     bn: "কুড়িগ্রাম",  division: "Rangpur" },
+  // Khulna Division
+  { en: "Khulna",       bn: "খুলনা",      division: "Khulna" },
+  { en: "Bagerhat",     bn: "বাগেরহাট",   division: "Khulna" },
+  { en: "Satkhira",     bn: "সাতক্ষীরা",  division: "Khulna" },
+  { en: "Jashore",      bn: "যশোর",       division: "Khulna" },
+  { en: "Magura",       bn: "মাগুরা",     division: "Khulna" },
+  { en: "Narail",       bn: "নড়াইল",     division: "Khulna" },
+  { en: "Chuadanga",    bn: "চুয়াডাঙ্গা", division: "Khulna" },
+  { en: "Meherpur",     bn: "মেহেরপুর",   division: "Khulna" },
+  { en: "Kushtia",      bn: "কুষ্টিয়া",  division: "Khulna" },
+  { en: "Jhenaidah",    bn: "ঝিনাইদহ",   division: "Khulna" },
+  // Barisal Division
+  { en: "Barishal",     bn: "বরিশাল",    division: "Barisal" },
+  { en: "Bhola",        bn: "ভোলা",      division: "Barisal" },
+  { en: "Patuakhali",   bn: "পটুয়াখালী", division: "Barisal" },
+  { en: "Barguna",      bn: "বরগুনা",    division: "Barisal" },
+  { en: "Pirojpur",     bn: "পিরোজপুর",  division: "Barisal" },
+  { en: "Jhalokati",    bn: "ঝালকাঠি",   division: "Barisal" },
+];
+
+/** Quick lookup: district English name → Bangla name */
+export const DISTRICT_BN: Record<string, string> = Object.fromEntries(
+  DISTRICTS.map((d) => [d.en, d.bn])
+);

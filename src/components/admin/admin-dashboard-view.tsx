@@ -10,6 +10,7 @@ import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { DemoNotice } from "@/components/shared/demo-notice";
+import { Footer } from "@/components/shared/footer";
 import { useReports } from "@/hooks/use-reports";
 import { ReportStatus, type Report, type ReportStatus as ReportStatusType } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -57,7 +58,8 @@ export function AdminDashboardView() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       <PageHeader
         icon={<LayoutDashboard className="size-5" />}
         iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
@@ -103,6 +105,8 @@ export function AdminDashboardView() {
         </div>
       )}
       <ReportDetailDialog report={selectedReport} open={dialogOpen} onClose={handleDialogClose} />
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 }

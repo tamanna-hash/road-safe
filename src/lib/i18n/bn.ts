@@ -69,6 +69,7 @@ export const bn = {
     filtersLabel: "ফিল্টার",
     category: "বিভাগ",
     severity: "তীব্রতা",
+    district: "জেলা",
     verification: "যাচাই",
     verifiedOnly: "✓ শুধু যাচাইকৃত",
     clearAll: "মুছুন",

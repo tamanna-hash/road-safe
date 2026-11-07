@@ -10,6 +10,7 @@ import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
 import { ReportListControls } from "@/components/reports/report-list-controls";
 import { PageHeader } from "@/components/shared/page-header";
 import { DemoNotice } from "@/components/shared/demo-notice";
+import { Footer } from "@/components/shared/footer";
 import { useReports, useReportFilters } from "@/hooks/use-reports";
 import { filterReports } from "@/lib/reports";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -69,7 +70,8 @@ export function ReportListView() {
   const handleDialogClose = () => { setDialogOpen(false); setTimeout(() => setSelectedReport(null), 300); };
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+    <>
+      <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
       <PageHeader
         icon={<FileText className="size-5" />}
         title={t.reportList.pageTitle}
@@ -105,6 +107,8 @@ export function ReportListView() {
         )}
       </div>
       <ReportDetailDialog report={selectedReport} open={dialogOpen} onClose={handleDialogClose} />
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 }

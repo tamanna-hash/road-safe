@@ -248,6 +248,7 @@ export function useReportFilters() {
     filters.categories.length > 0 ||
     filters.severities.length > 0 ||
     filters.statuses.length > 0 ||
+    filters.districts.length > 0 ||
     filters.verifiedOnly ||
     filters.searchQuery.trim() !== "";
 

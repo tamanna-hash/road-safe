@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MyReportCard } from "@/components/reports/my-report-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { DemoNotice } from "@/components/shared/demo-notice";
+import { Footer } from "@/components/shared/footer";
 import { useMyReports } from "@/hooks/use-reports";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -45,38 +46,41 @@ export function MyReportsView() {
   const { t } = useLanguage();
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-      <PageHeader
-        icon={<ClipboardList className="size-5" />}
-        iconColor="bg-green-500/10 text-green-600 dark:text-green-400"
-        title={t.myReports.pageTitle}
-        description={t.myReports.pageDesc}
-        action={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/explore" />} className="gap-1.5">
-              <MapPin className="size-3.5" />
-              <span className="hidden sm:inline">{t.myReports.viewOnMap}</span>
-              <span className="sm:hidden">{t.common.map}</span>
-            </Button>
-            <Button size="sm" nativeButton={false} render={<Link href="/report" />} className="gap-1.5">
-              <AlertTriangle className="size-3.5" />
-              <span className="hidden sm:inline">{t.myReports.newReport}</span>
-              <span className="sm:hidden">{t.common.report}</span>
-            </Button>
-          </div>
-        }
-      />
-      <DemoNotice className="mt-6" compact message={t.app.demoIdentity("Demo User")} />
-      <div className="mt-5">
-        {isLoading ? <ListSkeleton /> : myReports.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">{t.myReports.count(myReports.length)}</p>
-            {myReports.map((report) => <MyReportCard key={report.id} report={report} />)}
-          </div>
-        )}
+    <>
+      <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+        <PageHeader
+          icon={<ClipboardList className="size-5" />}
+          iconColor="bg-green-500/10 text-green-600 dark:text-green-400"
+          title={t.myReports.pageTitle}
+          description={t.myReports.pageDesc}
+          action={
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/explore" />} className="gap-1.5">
+                <MapPin className="size-3.5" />
+                <span className="hidden sm:inline">{t.myReports.viewOnMap}</span>
+                <span className="sm:hidden">{t.common.map}</span>
+              </Button>
+              <Button size="sm" nativeButton={false} render={<Link href="/report" />} className="gap-1.5">
+                <AlertTriangle className="size-3.5" />
+                <span className="hidden sm:inline">{t.myReports.newReport}</span>
+                <span className="sm:hidden">{t.common.report}</span>
+              </Button>
+            </div>
+          }
+        />
+        <DemoNotice className="mt-6" compact message={t.app.demoIdentity("Demo User")} />
+        <div className="mt-5">
+          {isLoading ? <ListSkeleton /> : myReports.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">{t.myReports.count(myReports.length)}</p>
+              {myReports.map((report) => <MyReportCard key={report.id} report={report} />)}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

@@ -257,6 +257,14 @@ export function filterReports(reports: Report[], filters: ReportFilters): Report
       return false;
     }
 
+    // District filter
+    if (
+      filters.districts.length > 0 &&
+      !filters.districts.includes(report.location.district ?? "")
+    ) {
+      return false;
+    }
+
     // Verified-only filter — hide PENDING and REJECTED reports
     if (
       filters.verifiedOnly &&
@@ -291,6 +299,7 @@ export function defaultFilters(): ReportFilters {
     categories: [],
     severities: [],
     statuses: [],
+    districts: [],
     verifiedOnly: false,
     searchQuery: "",
   };

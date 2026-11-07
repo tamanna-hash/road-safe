@@ -16,10 +16,7 @@ export const metadata: Metadata = {
  */
 export default function ExplorePage() {
   return (
-    <div
-      className="flex flex-col overflow-hidden w-full"
-      style={{ height: "calc(100dvh - 56px)" }}
-    >
+    <div className="flex flex-1 flex-col overflow-hidden">
       <MapMountGuard className="flex flex-1 flex-col overflow-hidden" />
     </div>
   );

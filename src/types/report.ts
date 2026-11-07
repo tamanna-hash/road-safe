@@ -60,6 +60,12 @@ export interface Location {
   lng: number;
   /** Human-readable address or landmark name (optional) */
   address?: string;
+  /** Bangla translation of the address (optional, for demo seed data) */
+  address_bn?: string;
+  /** District name in English (optional — used for district filter) */
+  district?: string;
+  /** District name in Bangla (optional) */
+  district_bn?: string;
 }
 
 /**
@@ -75,9 +81,13 @@ export interface Report {
 
   /** Short title summarising the issue */
   title: string;
+  /** Bangla translation of the title (optional, for demo seed data) */
+  title_bn?: string;
 
   /** Detailed description provided by the reporter */
   description: string;
+  /** Bangla translation of the description (optional, for demo seed data) */
+  description_bn?: string;
 
   /** Where the issue was observed */
   location: Location;
@@ -115,6 +125,8 @@ export interface Report {
    * Helps reporters understand what action was taken.
    */
   adminNote?: string;
+  /** Bangla translation of the admin note (optional, for demo seed data) */
+  adminNote_bn?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -141,6 +153,7 @@ export interface ReportFilters {
   categories: ReportCategory[];
   severities: Severity[];
   statuses: ReportStatus[];
+  districts: string[];
   /** When true, show only reports that have been verified (status !== PENDING && status !== REJECTED) */
   verifiedOnly: boolean;
   searchQuery: string;

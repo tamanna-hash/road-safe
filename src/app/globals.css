@@ -136,6 +136,43 @@
   }
 }
 
+/* ── Leaflet overrides ────────────────────────────────────────────────────── */
+
+/* Tooltips must always float above marker pins */
+.leaflet-tooltip-pane {
+  z-index: 9000 !important;
+}
+
+.leaflet-tooltip {
+  z-index: 9000 !important;
+  /* Clean shadow instead of default flat border */
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 0.625rem !important;
+  box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.14), 0 1px 4px 0 rgb(0 0 0 / 0.10) !important;
+  pointer-events: none !important;
+  /* Prevent card from growing wider than its content box */
+  max-width: 240px !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Tooltip arrow */
+.leaflet-tooltip-top::before {
+  border-top-color: #fff !important;
+}
+
+/* Make sure the overlay pane (where tooltips live) is above the marker pane */
+.leaflet-pane.leaflet-tooltip-pane {
+  z-index: 9000 !important;
+}
+
+/* Marker pane sits lower */
+.leaflet-pane.leaflet-marker-pane {
+  z-index: 600;
+}
+
 /* ---------------------------------------------------------------------------
    Accessibility improvements
    --------------------------------------------------------------------------- */
