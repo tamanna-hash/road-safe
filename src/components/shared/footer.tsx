@@ -3,46 +3,49 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Shield } from "lucide-react";
-import { APP_NAME, DEMO_DISCLAIMER } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
+import { useLanguage } from "@/lib/i18n/language-context";
 
-/** Renders the current year only on the client to satisfy Next.js 16 prerender rules. */
 function CopyrightYear() {
   const [year, setYear] = useState<number | null>(null);
-  useEffect(() => {
-    setYear(new Date().getFullYear());
-  }, []);
+  useEffect(() => { setYear(new Date().getFullYear()); }, []);
   return <>{year ?? "2026"}</>;
 }
 
 export function Footer() {
+  const { t } = useLanguage();
+  const [year, setYear] = useState<number | null>(null);
+  useEffect(() => { setYear(new Date().getFullYear()); }, []);
+
+  const LINKS = [
+    { href: "/explore",    label: t.nav.exploreMap },
+    { href: "/reports",    label: t.nav.reports },
+    { href: "/report",     label: t.nav.reportIssue },
+    { href: "/my-reports", label: t.nav.myReports },
+    { href: "/admin",      label: t.nav.admin },
+  ];
+
   return (
-    <footer className="border-t border-border bg-muted/40">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        {/* Top row — logo + nav links */}
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          {/* Brand */}
-          <div className="flex flex-col gap-2">
-            <Link href="/" className="flex items-center gap-2 font-bold text-foreground">
-              <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <Shield className="size-3.5" />
+    <footer className="border-t border-border/60 bg-muted/20">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3 max-w-xs">
+            <Link href="/" className="flex items-center gap-2.5 font-bold text-foreground">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <Shield className="size-4" />
               </div>
-              <span>{APP_NAME}</span>
+              <span className="text-base tracking-tight">{t.app.name}</span>
             </Link>
-            <p className="max-w-xs text-xs text-muted-foreground">
-              Community road safety awareness and accident hotspot reporting platform.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {t.footer.tagline}
             </p>
           </div>
 
-          {/* Quick links */}
-          <nav className="flex flex-col gap-1.5 text-sm">
-            <p className="font-medium text-foreground">Quick Links</p>
-            {[
-              { href: "/explore", label: "Explore Map" },
-              { href: "/reports", label: "All Reports" },
-              { href: "/report", label: "Report an Issue" },
-              { href: "/my-reports", label: "My Reports" },
-              { href: "/admin", label: "Admin Dashboard" },
-            ].map(({ href, label }) => (
+          <nav className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm sm:grid-cols-1">
+            <p className="col-span-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70 mb-1 sm:col-span-1">
+              {t.footer.navigation}
+            </p>
+            {LINKS.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
@@ -54,18 +57,13 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Demo disclaimer */}
-        <div className="mt-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 dark:border-yellow-900/40 dark:bg-yellow-950/20">
-          <p className="text-xs leading-relaxed text-yellow-800 dark:text-yellow-300">
-            <span className="font-semibold">Demo Notice: </span>
-            {DEMO_DISCLAIMER}
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 sm:flex-row">
+          <p className="text-xs text-muted-foreground">
+            {t.footer.copyright(year, t.app.name)}
           </p>
-        </div>
-
-        {/* Bottom row — copyright */}
-        <div className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row">
-          <p>&copy; <CopyrightYear /> {APP_NAME}. Frontend demonstration project.</p>
-          <p>Built with Next.js · Tailwind CSS · Leaflet · OpenStreetMap</p>
+          <p className="text-xs text-muted-foreground">
+            {t.footer.builtWith}
+          </p>
         </div>
       </div>
     </footer>

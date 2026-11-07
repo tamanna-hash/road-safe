@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MapWrapper } from "@/components/map/map-wrapper";
+import { MapMountGuard } from "@/components/map/map-mount-guard";
 
 export const metadata: Metadata = {
   title: "Explore Map",
@@ -10,15 +10,17 @@ export const metadata: Metadata = {
 /**
  * Explore page — Interactive road risk map.
  *
- * Uses flex layout so the map fills all remaining viewport height without
- * relying on hard-coded pixel calculations. The root layout's <main> is
- * already flex-col flex-1, so this page just needs to be flex-col flex-1
- * as well and the map will grow to fill everything below the navbar.
+ * MapMountGuard ensures Leaflet only initialises after the browser DOM is
+ * fully ready, preventing the appendChild error that occurs when the React
+ * Compiler pre-executes components during client-side navigation.
  */
 export default function ExplorePage() {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <MapWrapper className="flex flex-1 flex-col overflow-hidden" />
+    <div
+      className="flex flex-col overflow-hidden w-full"
+      style={{ height: "calc(100dvh - 56px)" }}
+    >
+      <MapMountGuard className="flex flex-1 flex-col overflow-hidden" />
     </div>
   );
 }

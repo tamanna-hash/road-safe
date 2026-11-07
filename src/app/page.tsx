@@ -1,208 +1,154 @@
+"use client";
+
 import Link from "next/link";
 import {
-  MapPin,
-  AlertTriangle,
-  ClipboardList,
-  LayoutDashboard,
-  ArrowRight,
-  Shield,
+  MapPin, AlertTriangle, ClipboardList,
+  LayoutDashboard, ArrowRight, Shield, List,
+  CheckCircle2, Users, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/constants";
-
-// ---------------------------------------------------------------------------
-// Feature card data
-// ---------------------------------------------------------------------------
-
-const FEATURES = [
-  {
-    href: "/explore",
-    icon: <MapPin className="size-6" />,
-    title: "Explore the Map",
-    description:
-      "Browse reported road safety issues on an interactive map. Filter by category, severity, and verification status to find risks near you.",
-    cta: "Open Map",
-    color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40",
-  },
-  {
-    href: "/reports",
-    icon: <ClipboardList className="size-6" />,
-    title: "Browse All Reports",
-    description:
-      "Search and filter the full list of community-submitted road safety reports by status, severity, and category.",
-    cta: "View Reports",
-    color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/40",
-  },
-  {
-    href: "/report",
-    icon: <AlertTriangle className="size-6" />,
-    title: "Report an Issue",
-    description:
-      "Spotted a dangerous road condition? Submit a report with location, category, severity, and an optional photo. Your report goes live on the map immediately.",
-    cta: "Submit Report",
-    color:
-      "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/40",
-  },
-  {
-    href: "/my-reports",
-    icon: <LayoutDashboard className="size-6" />,
-    title: "Track Your Reports",
-    description:
-      "Follow the progress of reports you have submitted. See when a report is verified, actioned, or resolved through a clear status timeline.",
-    cta: "My Reports",
-    color:
-      "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950/40",
-  },
-  {
-    href: "/admin",
-    icon: <Shield className="size-6" />,
-    title: "Admin Dashboard",
-    description:
-      "Review submitted reports, update statuses, and track resolution progress. Simulated admin interface — no real authentication required for this demo.",
-    cta: "Open Dashboard",
-    color:
-      "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-950/40",
-  },
-] as const;
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function HomePage() {
+  const { t } = useLanguage();
+  const h = t.home;
+
+  const FEATURES = [
+    { href: "/explore",    icon: <MapPin className="size-5" />,         accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400",   ...h.features.explore },
+    { href: "/reports",    icon: <List className="size-5" />,           accent: "bg-teal-500/10 text-teal-600 dark:text-teal-400",   ...h.features.reports },
+    { href: "/report",     icon: <AlertTriangle className="size-5" />,  accent: "bg-orange-500/10 text-orange-600 dark:text-orange-400", ...h.features.report },
+    { href: "/my-reports", icon: <ClipboardList className="size-5" />,  accent: "bg-green-500/10 text-green-600 dark:text-green-400", ...h.features.myReports },
+    { href: "/admin",      icon: <LayoutDashboard className="size-5" />, accent: "bg-purple-500/10 text-purple-600 dark:text-purple-400", ...h.features.admin },
+  ] as const;
+
+  const STATS = [
+    { icon: <Users className="size-5 text-primary" />, value: "12+", label: h.stats.sampleReports },
+    { icon: <TrendingUp className="size-5 text-primary" />, value: "8", label: h.stats.categories },
+    { icon: <CheckCircle2 className="size-5 text-primary" />, value: "5", label: h.stats.statusStages },
+  ];
+
+  const HOW_STEPS = [
+    h.howItWorks.step1,
+    h.howItWorks.step2,
+    h.howItWorks.step3,
+  ];
+
   return (
     <div className="flex flex-col">
-      {/* Hero section */}
-      <section className="border-b border-border bg-gradient-to-b from-muted/60 to-background">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6 sm:py-24">
-          {/* Badge */}
-          <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-            <Shield className="size-3.5" />
-            Community Road Safety Platform
+
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-b from-primary/5 via-background to-background">
+        <div className="mx-auto flex max-w-4xl flex-col items-center gap-8 px-4 py-20 text-center sm:px-6 sm:py-28">
+
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/8 px-3.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+            <Shield className="size-3" />
+            {h.hero.badge}
+          </span>
+
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              {h.hero.headline1}
+              <br />
+              <span className="text-primary">{h.hero.headline2}</span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
+              {h.hero.subheadline}
+            </p>
           </div>
 
-          {/* Headline */}
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Make Roads Safer,{" "}
-            <span className="text-primary">Together</span>
-          </h1>
-
-          {/* Sub-headline */}
-          <p className="max-w-xl text-lg text-muted-foreground">
-            {APP_NAME} helps communities identify dangerous road conditions,
-            report hazards, and track progress — all on an interactive map.
-          </p>
-
-          {/* CTA buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
               size="lg"
+              nativeButton={false}
               render={<Link href="/explore" />}
-              className="flex items-center gap-2"
+              className="gap-2 px-6"
             >
               <MapPin className="size-4" />
-              Explore the Map
+              {h.hero.ctaExplore}
             </Button>
             <Button
               size="lg"
               variant="outline"
+              nativeButton={false}
               render={<Link href="/report" />}
-              className="flex items-center gap-2"
+              className="gap-2 px-6"
             >
               <AlertTriangle className="size-4" />
-              Report an Issue
+              {h.hero.ctaReport}
             </Button>
           </div>
 
-          {/* Demo notice */}
-          <p className="text-xs text-muted-foreground">
-            Frontend demonstration — all data is stored locally in your browser.
-          </p>
+          <div className="flex flex-wrap justify-center gap-8 pt-4">
+            {STATS.map(({ icon, value, label }) => (
+              <div key={label} className="flex items-center gap-2">
+                {icon}
+                <div className="text-left">
+                  <p className="text-lg font-bold text-foreground leading-none">{value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-muted-foreground/70">{h.hero.demoNote}</p>
         </div>
       </section>
 
-      {/* Feature cards section */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
+      {/* ── Feature cards ─────────────────────────────────────── */}
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <div className="mb-10 text-center">
-          <h2 className="text-2xl font-semibold text-foreground">
-            Everything you need
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            Five core features working together to improve road safety awareness.
-          </p>
+          <h2 className="text-2xl font-semibold text-foreground">{h.features.heading}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{h.features.subheading}</p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {FEATURES.map(({ href, icon, title, description, cta, color }) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {FEATURES.map(({ href, icon, title, desc, cta, accent }) => (
             <Link
               key={href}
               href={href}
-              className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-md"
+              className="group flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5 transition-all hover:border-border hover:shadow-sm"
             >
-              {/* Icon */}
-              <div className={`flex size-12 items-center justify-center rounded-lg ${color}`}>
+              <div className={`flex size-10 items-center justify-center rounded-xl ${accent}`}>
                 {icon}
               </div>
-
-              {/* Content */}
-              <div className="flex flex-1 flex-col gap-2">
-                <h3 className="font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {description}
-                </p>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                <p className="text-xs leading-relaxed text-muted-foreground">{desc}</p>
               </div>
-
-              {/* CTA */}
-              <div className="flex items-center gap-1 text-sm font-medium text-primary">
+              <div className="flex items-center gap-1 text-xs font-semibold text-primary">
                 {cta}
-                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* How it works section */}
-      <section className="border-t border-border bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      {/* ── How it works ─────────────────────────────────────── */}
+      <section className="border-t border-border/60 bg-muted/30">
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-semibold text-foreground">
-              How it works
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              A simple three-step workflow from report to resolution.
-            </p>
+            <h2 className="text-2xl font-semibold text-foreground">{h.howItWorks.heading}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{h.howItWorks.subheading}</p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Submit a Report",
-                desc: "Pin the location on the map, describe the hazard, choose a category and severity level, and optionally attach a photo.",
-              },
-              {
-                step: "02",
-                title: "Review & Verify",
-                desc: "An administrator reviews the report and marks it as Verified, In Progress, Resolved, or Rejected with an explanatory note.",
-              },
-              {
-                step: "03",
-                title: "Track Progress",
-                desc: "Check My Reports at any time to see the current status of your submissions and any updates from the admin team.",
-              },
-            ].map(({ step, title, desc }) => (
-              <div key={step} className="flex flex-col gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  {step}
+          <div className="relative grid gap-8 sm:grid-cols-3">
+            <div className="absolute top-5 left-[16.66%] right-[16.66%] hidden h-px bg-border sm:block" />
+            {HOW_STEPS.map(({ title, desc }, i) => (
+              <div key={i} className="relative flex flex-col items-center gap-4 text-center sm:items-start sm:text-left">
+                <div className="relative z-10 flex size-10 items-center justify-center rounded-full border-2 border-primary bg-background text-sm font-bold text-primary">
+                  {i + 1}
                 </div>
-                <h3 className="font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <div>
+                  <h3 className="font-semibold text-foreground">{title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
     </div>
   );
 }

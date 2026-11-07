@@ -12,6 +12,8 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import {
   MAP_DEFAULT_CENTER,
+  MAP_MAX_BOUNDS,
+  MAP_TILE_BOUNDS,
   TILE_URL,
   TILE_ATTRIBUTION,
 } from "@/lib/constants";
@@ -74,11 +76,19 @@ export function LocationPickerMap({ value, onChange }: LocationPickerMapProps) {
   return (
     <MapContainer
       center={value ? [value.lat, value.lng] : MAP_DEFAULT_CENTER}
-      zoom={12}
+      zoom={7}
+      minZoom={6}
+      maxBounds={MAP_MAX_BOUNDS}
+      maxBoundsViscosity={1.0}
       className="h-full w-full cursor-crosshair"
       keyboard={false}
     >
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      <TileLayer
+        url={TILE_URL}
+        attribution={TILE_ATTRIBUTION}
+        bounds={MAP_TILE_BOUNDS}
+        noWrap={true}
+      />
       <ClickHandler onPick={(lat, lng) => onChange({ lat, lng })} />
       {value && (
         <Marker position={[value.lat, value.lng]} icon={PIN_ICON} />

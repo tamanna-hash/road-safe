@@ -46,9 +46,29 @@ export const DEMO_USER_NAME = "Demo Reporter";
 // ---------------------------------------------------------------------------
 
 export const MAP_DEFAULT_CENTER: [number, number] = [23.7751, 90.3990];
-export const MAP_DEFAULT_ZOOM = 12;
-export const MAP_MIN_ZOOM = 5;
+export const MAP_DEFAULT_ZOOM = 7;
+export const MAP_MIN_ZOOM = 6;
 export const MAP_MAX_ZOOM = 18;
+
+/**
+ * Geographic bounds for Bangladesh.
+ * Prevents users from panning outside the country.
+ * [southWest, northEast] in [lat, lng] format.
+ */
+export const MAP_MAX_BOUNDS: [[number, number], [number, number]] = [
+  [20.3, 87.9],   // south-west corner (with padding)
+  [26.8, 92.8],   // north-east corner (with padding)
+];
+
+/**
+ * Tighter tile bounds — only request tiles that cover Bangladesh.
+ * This prevents the tile layer from loading tiles for the whole world.
+ */
+export const MAP_TILE_BOUNDS: [[number, number], [number, number]] = [
+  [20.5, 88.0],
+  [26.7, 92.7],
+];
+
 export const TILE_URL =
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const TILE_ATTRIBUTION =

@@ -1,21 +1,31 @@
 "use client";
+// 'use no memo' — opt this component out of the React Compiler.
+// Leaflet manipulates the DOM directly and is incompatible with
+// the compiler's memoisation and pre-execution optimisations.
 
 /**
  * LeafletMap — core interactive map component.
  * Must only be rendered client-side (imported via MapWrapper with ssr:false).
+ *
+ * All Leaflet (L.*) calls are guarded to only run in a browser context.
+ * The React Compiler / strict mode can invoke render functions on the server
+ * even for client components, so we cannot assume `window` is available
+ * at module evaluation time.
  */
 
 import "leaflet/dist/leaflet.css";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
-import L from "leaflet";
+import type L from "leaflet";
 import type { Report, Severity as SeverityType } from "@/types";
 import {
   MAP_DEFAULT_CENTER,
   MAP_DEFAULT_ZOOM,
   MAP_MIN_ZOOM,
   MAP_MAX_ZOOM,
+  MAP_MAX_BOUNDS,
+  MAP_TILE_BOUNDS,
   TILE_URL,
   TILE_ATTRIBUTION,
   CATEGORY_MARKER_COLORS,
@@ -25,7 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Marker sizing — severity determines pin size
+// Marker sizing
 // ---------------------------------------------------------------------------
 
 const SEVERITY_SIZES: Record<SeverityType, number> = {
@@ -36,14 +46,14 @@ const SEVERITY_SIZES: Record<SeverityType, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// SVG marker icon factory
-// Visual language:
-//   Verified (VERIFIED / IN_PROGRESS / RESOLVED) → solid white ring, full opacity
-//   Pending  → dashed white ring, slightly reduced opacity
-//   Rejected → grey fill, dashed ring, low opacity
+// Icon factory — lazy, only called after mount (browser only)
 // ---------------------------------------------------------------------------
 
-function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
+function createMarkerIcon(
+  LRef: typeof L,
+  report: Report,
+  isSelected: boolean
+): L.DivIcon {
   const isVerified =
     report.status === "VERIFIED" ||
     report.status === "IN_PROGRESS" ||
@@ -54,14 +64,10 @@ function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
   const size = isSelected ? baseSize + 8 : baseSize;
   const height = Math.round(size * 1.35);
 
-  // Rejected markers are greyed out
   const fill = isRejected ? "#9ca3af" : CATEGORY_MARKER_COLORS[report.category];
-
-  // Ring style — solid for verified, dashed for unverified/pending
   const strokeDasharray = isVerified ? "none" : "3 2";
   const outerOpacity = isRejected ? 0.45 : isVerified ? 1 : 0.8;
 
-  // Selected ring — bright blue outline
   const selectionRing = isSelected
     ? `<circle cx="12" cy="8" r="10.5" fill="none" stroke="#3b82f6" stroke-width="2.5" opacity="0.9"/>`
     : "";
@@ -69,20 +75,14 @@ function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="${size}" height="${height}" style="opacity:${outerOpacity}">
   ${selectionRing}
   <path d="M12 1C7.03 1 3 5.03 3 10c0 6.25 9 19 9 19s9-12.75 9-19c0-4.97-4.03-9-9-9z"
-    fill="${fill}"
-    stroke="white"
-    stroke-width="1.8"
-    stroke-dasharray="${strokeDasharray}"
-  />
+    fill="${fill}" stroke="white" stroke-width="1.8" stroke-dasharray="${strokeDasharray}"/>
   <circle cx="12" cy="10" r="3.8" fill="white" opacity="0.9"/>
-  ${
-    report.severity === "CRITICAL"
-      ? `<text x="12" y="14" text-anchor="middle" font-size="5" font-weight="bold" fill="${fill}">!</text>`
-      : ""
-  }
+  ${report.severity === "CRITICAL"
+    ? `<text x="12" y="14" text-anchor="middle" font-size="5" font-weight="bold" fill="${fill}">!</text>`
+    : ""}
 </svg>`;
 
-  return L.divIcon({
+  return LRef.divIcon({
     html: svg,
     className: "",
     iconSize: [size, height],
@@ -114,6 +114,13 @@ export function LeafletMap({
   className,
 }: LeafletMapProps) {
   const mapRef = useRef<L.Map | null>(null);
+  // Leaflet is loaded lazily after mount to avoid SSR/prerender issues
+  const [LModule, setLModule] = useState<typeof L | null>(null);
+
+  useEffect(() => {
+    // Dynamically import Leaflet only on the client, after mount
+    import("leaflet").then((mod) => setLModule(mod.default));
+  }, []);
 
   // Pan to selected report
   useEffect(() => {
@@ -128,6 +135,15 @@ export function LeafletMap({
     }
   }, [selectedReportId, reports]);
 
+  // Don't render until Leaflet is available client-side
+  if (!LModule) {
+    return (
+      <div className={cn("h-full w-full flex items-center justify-center bg-muted/20", className)}>
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <MapContainer
       ref={mapRef}
@@ -135,14 +151,22 @@ export function LeafletMap({
       zoom={MAP_DEFAULT_ZOOM}
       minZoom={MAP_MIN_ZOOM}
       maxZoom={MAP_MAX_ZOOM}
+      maxBounds={MAP_MAX_BOUNDS}
+      maxBoundsViscosity={1.0}
       className={cn("h-full w-full", className)}
       keyboard={false}
     >
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      {/* OpenStreetMap tile layer — restricted to Bangladesh */}
+      <TileLayer
+        url={TILE_URL}
+        attribution={TILE_ATTRIBUTION}
+        bounds={MAP_TILE_BOUNDS}
+        noWrap={true}
+      />
 
       {reports.map((report) => {
         const isSelected = report.id === selectedReportId;
-        const icon = createMarkerIcon(report, isSelected);
+        const icon = createMarkerIcon(LModule, report, isSelected);
 
         return (
           <Marker
@@ -154,12 +178,7 @@ export function LeafletMap({
               click: () => onReportSelect?.(report),
             }}
           >
-            <Tooltip
-              direction="top"
-              offset={[0, -4]}
-              opacity={0.97}
-              permanent={false}
-            >
+            <Tooltip direction="top" offset={[0, -4]} opacity={0.97}>
               <TooltipContent report={report} />
             </Tooltip>
           </Marker>
@@ -170,7 +189,7 @@ export function LeafletMap({
 }
 
 // ---------------------------------------------------------------------------
-// Tooltip content (hover)
+// Tooltip content
 // ---------------------------------------------------------------------------
 
 function TooltipContent({ report }: { report: Report }) {

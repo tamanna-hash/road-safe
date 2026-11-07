@@ -26,11 +26,11 @@ export default function NotFound() {
 
       {/* Actions */}
       <div className="flex flex-wrap justify-center gap-3">
-        <Button render={<Link href="/" />} className="gap-2">
+        <Button nativeButton={false} render={<Link href="/" />} className="gap-2">
           <ArrowLeft className="size-4" />
           Back to home
         </Button>
-        <Button variant="outline" render={<Link href="/explore" />} className="gap-2">
+        <Button variant="outline" nativeButton={false} render={<Link href="/explore" />} className="gap-2">
           <MapPin className="size-4" />
           Explore map
         </Button>

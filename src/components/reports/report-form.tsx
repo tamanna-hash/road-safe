@@ -110,9 +110,8 @@ function SuccessState({
       </div>
 
       {/* Demo notice */}
-      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-900/40 dark:bg-yellow-950/20 dark:text-yellow-300 max-w-sm">
-        <strong>Demo: </strong>Report saved to your browser's localStorage. No
-        data was sent to any server.
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 max-w-sm">
+        Report saved to your browser only — no data sent to any server.
       </div>
 
       <div className="flex flex-wrap gap-3 justify-center">
@@ -350,13 +349,6 @@ export function ReportForm() {
           )}
         />
       </Field>
-
-      {/* Demo notice */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300">
-        <strong>Demo: </strong>This report will be saved to your browser's
-        localStorage only. No data is sent to any server. The report will appear
-        on the map with a Pending status.
-      </div>
 
       {/* Submit */}
       <Button
