@@ -1,8 +1,6 @@
 # RoadSafe — Road Safety Awareness & Accident Hotspot Reporting Platform
 
-
-<img src="https://i.ibb.co.com/ccYrbwPm/Screenshot-2026-11-08-183808.png" height="300px" width="400px">
-
+<img src="https://i.ibb.co.com/WX01zT6/Screenshot-2026-11-08-204945.png" height="300px" width="400px">
 
 🌐 **Live Demo:** [https://road-safe-tau.vercel.app](https://road-safe-tau.vercel.app)
 
