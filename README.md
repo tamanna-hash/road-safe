@@ -1,6 +1,6 @@
 # RoadSafe — Road Safety Awareness & Accident Hotspot Reporting Platform
 
-<img src="https://i.ibb.co.com/8gLCDBYC/Screenshot-2026-11-08-183823.png" height="300px" width="400px">
+
 <img src="https://i.ibb.co.com/ccYrbwPm/Screenshot-2026-11-08-183808.png" height="300px" width="400px">
 
 
