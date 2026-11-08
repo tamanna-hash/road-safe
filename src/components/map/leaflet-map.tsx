@@ -1,20 +1,8 @@
 "use client";
 
-/**
- * LeafletMap — vanilla Leaflet implementation (no react-leaflet).
- *
- * react-leaflet's MapContainer + TileLayer have an initialization race:
- * they call Leaflet's DOM APIs synchronously during React render, which
- * crashes when the component is pre-executed before the DOM is ready.
- *
- * This implementation initializes the map entirely inside useEffect,
- * which is guaranteed to run only after the DOM node exists.
- * All marker/tooltip management is also done imperatively in effects.
- */
-
 import "leaflet/dist/leaflet.css";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type L from "leaflet";
 import type { Report, Severity as SeverityType } from "@/types";
 import {
@@ -73,7 +61,13 @@ function createMarkerIcon(LRef: typeof L, report: Report, isSelected: boolean): 
   });
 }
 
-function buildTooltipHtml(report: Report, categoryLabel: string, severityLabel: string, verifiedLabel: string, isVerified: boolean): string {
+function buildTooltipHtml(
+  report: Report,
+  categoryLabel: string,
+  severityLabel: string,
+  verifiedLabel: string,
+  isVerified: boolean
+): string {
   const severityColor =
     report.severity === "CRITICAL" ? "color:#dc2626;font-weight:600" :
     report.severity === "HIGH" ? "color:#ea580c" : "color:#6b7280";
@@ -113,7 +107,7 @@ export interface LeafletMapProps {
 }
 
 // ---------------------------------------------------------------------------
-// Component — all Leaflet work happens inside useEffect (DOM guaranteed)
+// Component
 // ---------------------------------------------------------------------------
 
 export function LeafletMap({
@@ -129,6 +123,8 @@ export function LeafletMap({
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const LRef = useRef<typeof L | null>(null);
+  // Toggled to true once L.map() is ready — triggers the marker sync effect
+  const [mapReady, setMapReady] = useState(false);
 
   // --- Initialize map once on mount ---
   useEffect(() => {
@@ -159,6 +155,8 @@ export function LeafletMap({
       }).addTo(map);
 
       mapRef.current = map;
+      // Signal that the map is ready so the marker effect runs
+      setMapReady(true);
     });
 
     return () => {
@@ -172,11 +170,11 @@ export function LeafletMap({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // --- Sync markers when reports or selection changes ---
+  // --- Sync markers whenever map becomes ready OR reports/selection changes ---
   useEffect(() => {
     const map = mapRef.current;
     const L = LRef.current;
-    if (!map || !L) return;
+    if (!map || !L || !mapReady) return;
 
     const existingIds = new Set(markersRef.current.keys());
     const newIds = new Set(reports.map((r) => r.id));
@@ -225,12 +223,12 @@ export function LeafletMap({
         markersRef.current.set(report.id, marker);
       }
     });
-  }, [reports, selectedReportId, categoryLabels, severityLabels, verifiedLabel, onReportSelect]);
+  }, [mapReady, reports, selectedReportId, categoryLabels, severityLabels, verifiedLabel, onReportSelect]);
 
   // --- Pan to selected report ---
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !selectedReportId) return;
+    if (!map || !selectedReportId || !mapReady) return;
     const report = reports.find((r) => r.id === selectedReportId);
     if (report) {
       map.setView(
@@ -239,7 +237,7 @@ export function LeafletMap({
         { animate: true }
       );
     }
-  }, [selectedReportId, reports]);
+  }, [selectedReportId, reports, mapReady]);
 
   return (
     <div

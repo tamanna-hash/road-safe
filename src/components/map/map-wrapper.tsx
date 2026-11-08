@@ -98,7 +98,7 @@ export function MapWrapper({ className }: MapWrapperProps) {
       </div>
 
       {/* Map area */}
-      <div className="relative min-h-0 flex-1 bg-gray-100 dark:bg-gray-900" style={{ isolation: "isolate" }}>
+      <div className="relative min-h-0 flex-1 bg-gray-100 dark:bg-gray-900">
         <div className="absolute inset-0">
           <LeafletMap
             reports={visibleReports}

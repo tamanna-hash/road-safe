@@ -146,24 +146,6 @@
   z-index: 0 !important;
 }
 
-/* Ensure Leaflet's own pane z-indexes stay within its stacking context */
-.leaflet-pane,
-.leaflet-top,
-.leaflet-bottom {
-  z-index: unset;
-}
-
-/* Re-apply relative stacking within the isolated context */
-.leaflet-map-pane       { z-index: 2; }
-.leaflet-tile-pane      { z-index: 3; }
-.leaflet-overlay-pane   { z-index: 4; }
-.leaflet-shadow-pane    { z-index: 5; }
-.leaflet-marker-pane    { z-index: 6; }
-.leaflet-tooltip-pane   { z-index: 7; }
-.leaflet-popup-pane     { z-index: 8; }
-.leaflet-top,
-.leaflet-bottom         { z-index: 9; position: absolute; }
-
 /* Marker shadows for depth */
 .leaflet-marker-icon {
   filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.15)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
