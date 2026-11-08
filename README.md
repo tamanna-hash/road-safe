@@ -1,6 +1,7 @@
 # RoadSafe — Road Safety Awareness & Accident Hotspot Reporting Platform
 
-> **Frontend demonstration project** built as a recruitment assessment for a Frontend Engineer Intern position.
+<img src="https://i.ibb.co.com/ccYrbwPm/Screenshot-2026-11-08-183808.png" height="300px" width="400px">
+<img src="https://i.ibb.co.com/8gLCDBYC/Screenshot-2026-11-08-183823.png" height="300px" width="400px">
 
 🌐 **Live Demo:** [https://road-safe-tau.vercel.app](https://road-safe-tau.vercel.app)
 
@@ -307,16 +308,21 @@ Route (app)
 
 ---
 
-## Assessment Notes
 
-This project was built as a frontend intern assessment demonstrating:
+## 💙 A Note from the Developer
 
-- Structured, phase-by-phase development approach
-- TypeScript with strict mode and no `any` usage
-- Separation of concerns (data layer, hooks, components, types)
-- Real-world patterns (form validation, map integration, status workflows)
-- Accessibility considerations (skip-to-content, ARIA labels, prefers-reduced-motion)
-- Responsive design without hardcoded pixel calculations
-- Honest documentation of limitations (no fake auth claims, no fake backend claims)
+Hello! I'm **Tamanna**.
 
-**54 source files** · **Next.js 16** · **TypeScript strict** · **0 type errors** · **Clean production build**
+RoadSafe is an early-stage concept demo, not a complete MVP or a fully developed road safety solution. It represents my idea of how technology could help address road accident risks in Bangladesh.
+
+The goal is to create a platform where people can identify and report dangerous road locations, explore reported hazards through an interactive map, and help authorities recognize accident-prone areas and prioritize necessary actions.
+
+This demo focuses on presenting the core idea, user experience, and key interactions to demonstrate how such a platform could work. The broader vision is to improve public awareness, make road hazard information more accessible, and support authorities in making informed decisions to reduce road accident risks.
+
+There is still significant room for development, validation, and collaboration with relevant authorities to turn this concept into a practical solution.
+
+**RoadSafe is a step toward exploring how technology can contribute to safer roads in Bangladesh.**
+
+Thank you for checking out this application! ❤️
+
+---

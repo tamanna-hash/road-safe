@@ -1,24 +1,21 @@
 "use client";
-"use no memo";
 
 /**
- * LeafletMap — core interactive map component.
+ * LeafletMap — vanilla Leaflet implementation (no react-leaflet).
  *
- * IMPORTANT: Only import via dynamic() with ssr:false (done in map-wrapper.tsx).
+ * react-leaflet's MapContainer + TileLayer have an initialization race:
+ * they call Leaflet's DOM APIs synchronously during React render, which
+ * crashes when the component is pre-executed before the DOM is ready.
  *
- * Triple-guarded against SSR/prerender crashes:
- * 1. dynamic(ssr:false) — module never loads on the server
- * 2. MapMountGuard — component only renders after browser hydration
- * 3. Internal useState(false) guard — MapContainer only renders after
- *    useEffect confirms we are in the browser (last line of defence against
- *    React Compiler pre-execution calling appendChild before DOM is ready)
+ * This implementation initializes the map entirely inside useEffect,
+ * which is guaranteed to run only after the DOM node exists.
+ * All marker/tooltip management is also done imperatively in effects.
  */
 
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 
-import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import type L from "leaflet";
 import type { Report, Severity as SeverityType } from "@/types";
 import {
   MAP_DEFAULT_CENTER,
@@ -26,42 +23,22 @@ import {
   MAP_MIN_ZOOM,
   MAP_MAX_ZOOM,
   MAP_MAX_BOUNDS,
-  MAP_TILE_BOUNDS,
   TILE_URL,
   TILE_ATTRIBUTION,
   CATEGORY_MARKER_COLORS,
 } from "@/lib/constants";
-import { useLocalizedReport } from "@/hooks/use-localized-report";
-import { useLanguage } from "@/lib/i18n/language-context";
 import { cn } from "@/lib/utils";
 
-// Ensure Leaflet tooltips always float above all markers
-const TOOLTIP_Z_INDEX_STYLE = `
-  .leaflet-tooltip {
-    z-index: 9000 !important;
-    pointer-events: none;
-    max-width: 240px !important;
-    overflow: hidden !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-  }
-  .leaflet-tooltip-pane { z-index: 9000 !important; }
-`;
-
 // ---------------------------------------------------------------------------
-// Marker sizing
+// Marker helpers
 // ---------------------------------------------------------------------------
 
 const SEVERITY_SIZES: Record<SeverityType, number> = {
   LOW: 24, MEDIUM: 28, HIGH: 32, CRITICAL: 38,
 };
 
-// ---------------------------------------------------------------------------
-// Icon factory
-// ---------------------------------------------------------------------------
-
-function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
-  const isVerified = report.status === "VERIFIED" || report.status === "IN_PROGRESS" || report.status === "RESOLVED";
+function createMarkerIcon(LRef: typeof L, report: Report, isSelected: boolean): L.DivIcon {
+  const isVerified = ["VERIFIED", "IN_PROGRESS", "RESOLVED"].includes(report.status);
   const isRejected = report.status === "REJECTED";
 
   const baseSize = SEVERITY_SIZES[report.severity];
@@ -86,7 +63,7 @@ function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
     : ""}
 </svg>`;
 
-  return L.divIcon({
+  return LRef.divIcon({
     html: svg,
     className: "",
     iconSize: [size, height],
@@ -94,6 +71,31 @@ function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
     popupAnchor: [0, -height],
     tooltipAnchor: [size / 2, -(height / 2)],
   });
+}
+
+function buildTooltipHtml(report: Report, categoryLabel: string, severityLabel: string, verifiedLabel: string, isVerified: boolean): string {
+  const severityColor =
+    report.severity === "CRITICAL" ? "color:#dc2626;font-weight:600" :
+    report.severity === "HIGH" ? "color:#ea580c" : "color:#6b7280";
+
+  const verifiedBadge = isVerified
+    ? `<span style="flex-shrink:0;border-radius:9999px;background:#dcfce7;padding:1px 6px;font-size:10px;font-weight:500;color:#15803d;white-space:nowrap">✓ ${verifiedLabel}</span>`
+    : "";
+
+  const addressLine = report.location.address
+    ? `<p style="margin:2px 0 0;font-size:10px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${report.location.address}</p>`
+    : "";
+
+  return `<div style="width:220px;max-width:220px;overflow:hidden;font-family:system-ui,sans-serif">
+  <div style="display:flex;align-items:flex-start;gap:6px">
+    <p style="flex:1;min-width:0;font-weight:600;font-size:12px;color:#111827;line-height:1.3;word-break:break-word;margin:0">${report.title}</p>
+    ${verifiedBadge}
+  </div>
+  <p style="margin:4px 0 0;font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+    ${categoryLabel} · <span style="${severityColor}">${severityLabel}</span>
+  </p>
+  ${addressLine}
+</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,124 +107,145 @@ export interface LeafletMapProps {
   selectedReportId?: string | null;
   onReportSelect?: (report: Report) => void;
   className?: string;
+  categoryLabels: Record<string, string>;
+  severityLabels: Record<string, string>;
+  verifiedLabel: string;
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Component — all Leaflet work happens inside useEffect (DOM guaranteed)
 // ---------------------------------------------------------------------------
 
-export function LeafletMap({ reports, selectedReportId, onReportSelect, className }: LeafletMapProps) {
+export function LeafletMap({
+  reports,
+  selectedReportId,
+  onReportSelect,
+  className,
+  categoryLabels,
+  severityLabels,
+  verifiedLabel,
+}: LeafletMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  // Guard: never render MapContainer until confirmed inside the browser.
-  // React Compiler can pre-execute render functions before DOM is ready,
-  // causing Leaflet's appendChild to crash even with ssr:false.
-  const [browserReady, setBrowserReady] = useState(false);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const LRef = useRef<typeof L | null>(null);
 
+  // --- Initialize map once on mount ---
   useEffect(() => {
-    setBrowserReady(true);
-  }, []);
+    if (!containerRef.current || mapRef.current) return;
 
-  // Pan to selected report when selection changes
+    let cancelled = false;
+
+    import("leaflet").then((mod) => {
+      if (cancelled || !containerRef.current || mapRef.current) return;
+
+      const L = mod.default;
+      LRef.current = L;
+
+      const map = L.map(containerRef.current, {
+        center: MAP_DEFAULT_CENTER,
+        zoom: MAP_DEFAULT_ZOOM,
+        minZoom: MAP_MIN_ZOOM,
+        maxZoom: MAP_MAX_ZOOM,
+        maxBounds: MAP_MAX_BOUNDS as L.LatLngBoundsExpression,
+        maxBoundsViscosity: 1.0,
+        keyboard: false,
+        zoomControl: true,
+      });
+
+      L.tileLayer(TILE_URL, {
+        attribution: TILE_ATTRIBUTION,
+        noWrap: true,
+      }).addTo(map);
+
+      mapRef.current = map;
+    });
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markersRef.current.clear();
+        LRef.current = null;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- Sync markers when reports or selection changes ---
   useEffect(() => {
-    if (!selectedReportId || !mapRef.current) return;
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!map || !L) return;
+
+    const existingIds = new Set(markersRef.current.keys());
+    const newIds = new Set(reports.map((r) => r.id));
+
+    // Remove stale markers
+    existingIds.forEach((id) => {
+      if (!newIds.has(id)) {
+        markersRef.current.get(id)?.remove();
+        markersRef.current.delete(id);
+      }
+    });
+
+    // Add or update markers
+    reports.forEach((report) => {
+      const isSelected = report.id === selectedReportId;
+      const isVerified = ["VERIFIED", "IN_PROGRESS", "RESOLVED"].includes(report.status);
+      const icon = createMarkerIcon(L, report, isSelected);
+      const tooltipHtml = buildTooltipHtml(
+        report,
+        categoryLabels[report.category] ?? report.category,
+        severityLabels[report.severity] ?? report.severity,
+        verifiedLabel,
+        isVerified
+      );
+
+      const existing = markersRef.current.get(report.id);
+      if (existing) {
+        existing.setIcon(icon);
+        existing.setZIndexOffset(isSelected ? 1000 : 0);
+        existing.unbindTooltip();
+        existing.bindTooltip(tooltipHtml, {
+          direction: "top", offset: [0, -8], opacity: 1,
+          className: "leaflet-tooltip-custom",
+        });
+      } else {
+        const marker = L.marker([report.location.lat, report.location.lng], {
+          icon,
+          zIndexOffset: isSelected ? 1000 : 0,
+        });
+        marker.bindTooltip(tooltipHtml, {
+          direction: "top", offset: [0, -8], opacity: 1,
+          className: "leaflet-tooltip-custom",
+        });
+        marker.on("click", () => onReportSelect?.(report));
+        marker.addTo(map);
+        markersRef.current.set(report.id, marker);
+      }
+    });
+  }, [reports, selectedReportId, categoryLabels, severityLabels, verifiedLabel, onReportSelect]);
+
+  // --- Pan to selected report ---
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedReportId) return;
     const report = reports.find((r) => r.id === selectedReportId);
     if (report) {
-      mapRef.current.setView(
+      map.setView(
         [report.location.lat, report.location.lng],
-        Math.max(mapRef.current.getZoom(), 14),
+        Math.max(map.getZoom(), 14),
         { animate: true }
       );
     }
   }, [selectedReportId, reports]);
 
-  if (!browserReady) {
-    return (
-      <div className={cn("h-full w-full flex items-center justify-center bg-muted/20", className)}>
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
-    <>
-      <style>{TOOLTIP_Z_INDEX_STYLE}</style>
-      <MapContainer
-        ref={mapRef}
-        center={MAP_DEFAULT_CENTER}
-        zoom={MAP_DEFAULT_ZOOM}
-        minZoom={MAP_MIN_ZOOM}
-        maxZoom={MAP_MAX_ZOOM}
-        maxBounds={MAP_MAX_BOUNDS}
-        maxBoundsViscosity={1.0}
-        className={cn("h-full w-full", className)}
-        keyboard={false}
-      >
-        <TileLayer
-          url={TILE_URL}
-          attribution={TILE_ATTRIBUTION}
-          bounds={MAP_TILE_BOUNDS}
-          noWrap={true}
-        />
-
-        {reports.map((report) => {
-          const isSelected = report.id === selectedReportId;
-          const icon = createMarkerIcon(report, isSelected);
-
-          return (
-            <Marker
-              key={report.id}
-              position={[report.location.lat, report.location.lng]}
-              icon={icon}
-              zIndexOffset={isSelected ? 1000 : 0}
-              eventHandlers={{ click: () => onReportSelect?.(report) }}
-            >
-              <Tooltip direction="top" offset={[0, -8]} opacity={1} sticky={false}>
-                <TooltipContent report={report} />
-              </Tooltip>
-            </Marker>
-          );
-        })}
-      </MapContainer>
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tooltip content
-// ---------------------------------------------------------------------------
-
-function TooltipContent({ report }: { report: Report }) {
-  const { t } = useLanguage();
-  const { title, address } = useLocalizedReport(report);
-
-  const isVerified = report.status === "VERIFIED" || report.status === "IN_PROGRESS" || report.status === "RESOLVED";
-
-  return (
-    <div className="w-56 max-w-[224px] overflow-hidden">
-      <div className="flex items-start gap-2">
-        <p className="flex-1 min-w-0 font-semibold text-gray-900 text-xs leading-snug break-words">
-          {title}
-        </p>
-        {isVerified && (
-          <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 whitespace-nowrap">
-            ✓ {t.status.VERIFIED}
-          </span>
-        )}
-      </div>
-      <p className="mt-1 text-[11px] text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
-        {t.category[report.category]} ·{" "}
-        <span className={
-          report.severity === "CRITICAL" ? "font-semibold text-red-600" :
-          report.severity === "HIGH" ? "text-orange-600" : "text-gray-500"
-        }>
-          {t.severity[report.severity]}
-        </span>
-      </p>
-      {address && (
-        <p className="mt-0.5 text-[10px] text-gray-400 overflow-hidden text-ellipsis whitespace-nowrap">
-          📍 {address}
-        </p>
-      )}
-    </div>
+    <div
+      ref={containerRef}
+      className={cn("h-full w-full", className)}
+      aria-label="Interactive road safety map"
+    />
   );
 }
