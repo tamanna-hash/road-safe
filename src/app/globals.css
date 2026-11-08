@@ -138,6 +138,16 @@
 
 /* ── Leaflet overrides ────────────────────────────────────────────────────── */
 
+/* Marker shadows for depth */
+.leaflet-marker-icon {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.15)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
+  transition: filter 0.2s ease;
+}
+
+.leaflet-marker-icon:hover {
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.2)) drop-shadow(0 2px 4px rgb(0 0 0 / 0.15));
+}
+
 /* Tooltips must always float above marker pins */
 .leaflet-tooltip-pane {
   z-index: 9000 !important;
@@ -145,30 +155,39 @@
 
 .leaflet-tooltip {
   z-index: 9000 !important;
-  /* Clean shadow instead of default flat border */
+  /* Clean modern card style */
+  background: white !important;
   border: none !important;
-  border-radius: 0.5rem !important;
-  padding: 0.5rem 0.625rem !important;
-  box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.14), 0 1px 4px 0 rgb(0 0 0 / 0.10) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.625rem 0.75rem !important;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
   pointer-events: none !important;
-  /* Prevent card from growing wider than its content box */
   max-width: 240px !important;
   overflow: hidden !important;
   white-space: normal !important;
   word-break: break-word !important;
 }
 
-/* Tooltip arrow */
-.leaflet-tooltip-top::before {
-  border-top-color: #fff !important;
+/* Dark mode tooltip */
+.dark .leaflet-tooltip {
+  background: oklch(0.2 0.015 250) !important;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3) !important;
 }
 
-/* Make sure the overlay pane (where tooltips live) is above the marker pane */
+/* Tooltip arrow */
+.leaflet-tooltip-top::before {
+  border-top-color: white !important;
+}
+
+.dark .leaflet-tooltip-top::before {
+  border-top-color: oklch(0.2 0.015 250) !important;
+}
+
+/* Pane stacking */
 .leaflet-pane.leaflet-tooltip-pane {
   z-index: 9000 !important;
 }
 
-/* Marker pane sits lower */
 .leaflet-pane.leaflet-marker-pane {
   z-index: 600;
 }

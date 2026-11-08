@@ -1,23 +1,24 @@
 "use client";
-// 'use no memo' — opt this component out of the React Compiler.
-// Leaflet manipulates the DOM directly and is incompatible with
-// the compiler's memoisation and pre-execution optimisations.
+"use no memo";
 
 /**
  * LeafletMap — core interactive map component.
- * Must only be rendered client-side (imported via MapWrapper with ssr:false).
  *
- * All Leaflet (L.*) calls are guarded to only run in a browser context.
- * The React Compiler / strict mode can invoke render functions on the server
- * even for client components, so we cannot assume `window` is available
- * at module evaluation time.
+ * IMPORTANT: Only import via dynamic() with ssr:false (done in map-wrapper.tsx).
+ *
+ * Triple-guarded against SSR/prerender crashes:
+ * 1. dynamic(ssr:false) — module never loads on the server
+ * 2. MapMountGuard — component only renders after browser hydration
+ * 3. Internal useState(false) guard — MapContainer only renders after
+ *    useEffect confirms we are in the browser (last line of defence against
+ *    React Compiler pre-execution calling appendChild before DOM is ready)
  */
 
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
-import type L from "leaflet";
 import type { Report, Severity as SeverityType } from "@/types";
 import {
   MAP_DEFAULT_CENTER,
@@ -44,9 +45,7 @@ const TOOLTIP_Z_INDEX_STYLE = `
     white-space: normal !important;
     word-break: break-word !important;
   }
-  .leaflet-tooltip-pane {
-    z-index: 9000 !important;
-  }
+  .leaflet-tooltip-pane { z-index: 9000 !important; }
 `;
 
 // ---------------------------------------------------------------------------
@@ -54,25 +53,15 @@ const TOOLTIP_Z_INDEX_STYLE = `
 // ---------------------------------------------------------------------------
 
 const SEVERITY_SIZES: Record<SeverityType, number> = {
-  LOW: 24,
-  MEDIUM: 28,
-  HIGH: 32,
-  CRITICAL: 38,
+  LOW: 24, MEDIUM: 28, HIGH: 32, CRITICAL: 38,
 };
 
 // ---------------------------------------------------------------------------
-// Icon factory — lazy, only called after mount (browser only)
+// Icon factory
 // ---------------------------------------------------------------------------
 
-function createMarkerIcon(
-  LRef: typeof L,
-  report: Report,
-  isSelected: boolean
-): L.DivIcon {
-  const isVerified =
-    report.status === "VERIFIED" ||
-    report.status === "IN_PROGRESS" ||
-    report.status === "RESOLVED";
+function createMarkerIcon(report: Report, isSelected: boolean): L.DivIcon {
+  const isVerified = report.status === "VERIFIED" || report.status === "IN_PROGRESS" || report.status === "RESOLVED";
   const isRejected = report.status === "REJECTED";
 
   const baseSize = SEVERITY_SIZES[report.severity];
@@ -97,7 +86,7 @@ function createMarkerIcon(
     : ""}
 </svg>`;
 
-  return LRef.divIcon({
+  return L.divIcon({
     html: svg,
     className: "",
     iconSize: [size, height],
@@ -122,22 +111,18 @@ export interface LeafletMapProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function LeafletMap({
-  reports,
-  selectedReportId,
-  onReportSelect,
-  className,
-}: LeafletMapProps) {
+export function LeafletMap({ reports, selectedReportId, onReportSelect, className }: LeafletMapProps) {
   const mapRef = useRef<L.Map | null>(null);
-  // Leaflet is loaded lazily after mount to avoid SSR/prerender issues
-  const [LModule, setLModule] = useState<typeof L | null>(null);
+  // Guard: never render MapContainer until confirmed inside the browser.
+  // React Compiler can pre-execute render functions before DOM is ready,
+  // causing Leaflet's appendChild to crash even with ssr:false.
+  const [browserReady, setBrowserReady] = useState(false);
 
   useEffect(() => {
-    // Dynamically import Leaflet only on the client, after mount
-    import("leaflet").then((mod) => setLModule(mod.default));
+    setBrowserReady(true);
   }, []);
 
-  // Pan to selected report
+  // Pan to selected report when selection changes
   useEffect(() => {
     if (!selectedReportId || !mapRef.current) return;
     const report = reports.find((r) => r.id === selectedReportId);
@@ -150,8 +135,7 @@ export function LeafletMap({
     }
   }, [selectedReportId, reports]);
 
-  // Don't render until Leaflet is available client-side
-  if (!LModule) {
+  if (!browserReady) {
     return (
       <div className={cn("h-full w-full flex items-center justify-center bg-muted/20", className)}>
         <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -161,7 +145,6 @@ export function LeafletMap({
 
   return (
     <>
-      {/* Inject tooltip z-index fix */}
       <style>{TOOLTIP_Z_INDEX_STYLE}</style>
       <MapContainer
         ref={mapRef}
@@ -174,7 +157,6 @@ export function LeafletMap({
         className={cn("h-full w-full", className)}
         keyboard={false}
       >
-        {/* OpenStreetMap tile layer — restricted to Bangladesh */}
         <TileLayer
           url={TILE_URL}
           attribution={TILE_ATTRIBUTION}
@@ -184,7 +166,7 @@ export function LeafletMap({
 
         {reports.map((report) => {
           const isSelected = report.id === selectedReportId;
-          const icon = createMarkerIcon(LModule, report, isSelected);
+          const icon = createMarkerIcon(report, isSelected);
 
           return (
             <Marker
@@ -192,17 +174,9 @@ export function LeafletMap({
               position={[report.location.lat, report.location.lng]}
               icon={icon}
               zIndexOffset={isSelected ? 1000 : 0}
-              eventHandlers={{
-                click: () => onReportSelect?.(report),
-              }}
+              eventHandlers={{ click: () => onReportSelect?.(report) }}
             >
-              <Tooltip
-                direction="top"
-                offset={[0, -8]}
-                opacity={1}
-                sticky={false}
-                className="leaflet-tooltip-custom"
-              >
+              <Tooltip direction="top" offset={[0, -8]} opacity={1} sticky={false}>
                 <TooltipContent report={report} />
               </Tooltip>
             </Marker>
@@ -221,10 +195,7 @@ function TooltipContent({ report }: { report: Report }) {
   const { t } = useLanguage();
   const { title, address } = useLocalizedReport(report);
 
-  const isVerified =
-    report.status === "VERIFIED" ||
-    report.status === "IN_PROGRESS" ||
-    report.status === "RESOLVED";
+  const isVerified = report.status === "VERIFIED" || report.status === "IN_PROGRESS" || report.status === "RESOLVED";
 
   return (
     <div className="w-56 max-w-[224px] overflow-hidden">
@@ -242,8 +213,7 @@ function TooltipContent({ report }: { report: Report }) {
         {t.category[report.category]} ·{" "}
         <span className={
           report.severity === "CRITICAL" ? "font-semibold text-red-600" :
-          report.severity === "HIGH" ? "text-orange-600" :
-          "text-gray-500"
+          report.severity === "HIGH" ? "text-orange-600" : "text-gray-500"
         }>
           {t.severity[report.severity]}
         </span>

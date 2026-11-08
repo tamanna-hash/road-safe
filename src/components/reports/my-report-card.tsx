@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MapPin, Calendar, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge, SeverityBadge, CategoryBadge } from "@/components/shared/badges";
@@ -25,42 +26,56 @@ export function MyReportCard({ report }: MyReportCardProps) {
   const { lang, t } = useLanguage();
   const { title, description, address, adminNote } = useLocalizedReport(report);
   const rc = t.reportCard;
+  const router = useRouter();
 
   return (
     <Card className={cn("transition-shadow", expanded && "shadow-md")}>
       <CardContent className="p-4">
-        <button
-          type="button"
-          className="w-full text-left"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground leading-snug line-clamp-2">{title}</p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <StatusBadge status={report.status} />
-                <SeverityBadge severity={report.severity} />
-                <CategoryBadge category={report.category} />
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {address && (
-                  <span className="flex items-center gap-1 truncate max-w-[200px]">
-                    <MapPin className="size-3 shrink-0" />
-                    <span className="truncate">{address}</span>
+        <div className="flex items-start gap-2">
+          <button
+            type="button"
+            className="w-full text-left"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-foreground leading-snug line-clamp-2">{title}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <StatusBadge status={report.status} />
+                  <SeverityBadge severity={report.severity} />
+                  <CategoryBadge category={report.category} />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {address && (
+                    <span className="flex items-center gap-1 truncate max-w-[200px]">
+                      <MapPin className="size-3 shrink-0" />
+                      <span className="truncate">{address}</span>
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Calendar className="size-3 shrink-0" />
+                    {fmtDate(report.submittedAt, lang)}
                   </span>
-                )}
-                <span className="flex items-center gap-1">
-                  <Calendar className="size-3 shrink-0" />
-                  {fmtDate(report.submittedAt, lang)}
-                </span>
+                </div>
+              </div>
+              <div className="shrink-0 text-muted-foreground mt-0.5">
+                {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
               </div>
             </div>
-            <div className="shrink-0 text-muted-foreground mt-0.5">
-              {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-            </div>
-          </div>
-        </button>
+          </button>
+
+          {/* See on map — outside the expand button to avoid triggering expand */}
+          <button
+            type="button"
+            onClick={() => router.push(`/explore?id=${report.id}`)}
+            className="shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors mt-0.5"
+            title={t.common.seeOnMap}
+          >
+            <MapPin className="size-3" />
+            <span className="hidden sm:inline">{t.common.seeOnMap}</span>
+          </button>
+        </div>
 
         {expanded && (
           <div className="mt-4 space-y-4">

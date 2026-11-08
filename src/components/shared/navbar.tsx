@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Menu, MapPin, AlertTriangle, ClipboardList,
-  LayoutDashboard, List, Shield,
+  LayoutDashboard, List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,8 +90,8 @@ export function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 font-bold text-foreground shrink-0">
-          <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Shield className="size-4" />
+          <div className="flex size-8 items-center justify-center rounded-xl overflow-hidden shadow-sm">
+            <Image src="/road.jpg" alt={APP_NAME} width={32} height={32} className="object-cover w-full h-full" />
           </div>
           <span className="text-base tracking-tight">{APP_NAME}</span>
         </Link>
@@ -126,8 +127,8 @@ export function Navbar() {
               <SheetHeader className="px-5 py-4 border-b border-border/60">
                 <SheetTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2.5 text-base font-bold">
-                    <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                      <Shield className="size-4" />
+                    <div className="flex size-8 items-center justify-center rounded-xl overflow-hidden">
+                      <Image src="/road.jpg" alt={APP_NAME} width={32} height={32} className="object-cover w-full h-full" />
                     </div>
                     {APP_NAME}
                   </span>

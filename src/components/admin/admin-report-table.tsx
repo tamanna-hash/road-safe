@@ -96,9 +96,14 @@ function ReportRow({
 
 export function AdminReportTable({ reports, onStatusChange, onViewDetail }: AdminReportTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(15);
   const { t } = useLanguage();
 
   const toggleExpand = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
+
+  const visibleReports = reports.slice(0, visibleCount);
+  const hasMore = visibleCount < reports.length;
+  const remaining = reports.length - visibleCount;
 
   if (reports.length === 0) {
     return (
@@ -109,34 +114,67 @@ export function AdminReportTable({ reports, onStatusChange, onViewDetail }: Admi
   }
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="w-[35%] pl-4">{t.nav.reports}</TableHead>
-            <TableHead>{t.reportList.statusFilter}</TableHead>
-            <TableHead className="hidden sm:table-cell">{t.reportList.severityFilter}</TableHead>
-            <TableHead className="hidden md:table-cell">{t.filters.category}</TableHead>
-            <TableHead className="hidden lg:table-cell">{t.reportCard.submittedOn}</TableHead>
-            <TableHead className="text-right pr-4">{t.admin.viewDetails}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reports.map((report) => (
-            <ReportRow
-              key={report.id}
-              report={report}
-              isExpanded={expandedId === report.id}
-              onToggle={() => toggleExpand(report.id)}
-              onStatusChange={(id, status, note) => {
-                onStatusChange(id, status, note);
-                setExpandedId(null);
-              }}
-              onViewDetail={onViewDetail}
-            />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-3">
+      <div className="rounded-xl border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-[35%] pl-4">{t.nav.reports}</TableHead>
+              <TableHead>{t.reportList.statusFilter}</TableHead>
+              <TableHead className="hidden sm:table-cell">{t.reportList.severityFilter}</TableHead>
+              <TableHead className="hidden md:table-cell">{t.filters.category}</TableHead>
+              <TableHead className="hidden lg:table-cell">{t.reportCard.submittedOn}</TableHead>
+              <TableHead className="text-right pr-4">{t.admin.viewDetails}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleReports.map((report) => (
+              <ReportRow
+                key={report.id}
+                report={report}
+                isExpanded={expandedId === report.id}
+                onToggle={() => toggleExpand(report.id)}
+                onStatusChange={(id, status, note) => {
+                  onStatusChange(id, status, note);
+                  setExpandedId(null);
+                }}
+                onViewDetail={onViewDetail}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Show more / Show less footer */}
+      <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+        <span>
+          Showing {visibleReports.length} of {reports.length} reports
+        </span>
+        <div className="flex gap-2">
+          {hasMore && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisibleCount((c) => c + 15)}
+              className="gap-1.5 text-xs h-8"
+            >
+              <ChevronDown className="size-3.5" />
+              Show {Math.min(remaining, 15)} more
+            </Button>
+          )}
+          {visibleCount > 15 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setVisibleCount(15); setExpandedId(null); }}
+              className="gap-1.5 text-xs h-8 text-muted-foreground"
+            >
+              <ChevronUp className="size-3.5" />
+              Show less
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

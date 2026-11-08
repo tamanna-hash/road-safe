@@ -257,6 +257,7 @@ export const en = {
     error404: "Page not found",
     error404Desc: "The page you're looking for doesn't exist or has been moved.",
     backToHome: "Back to home",
+    seeOnMap: "See on map",
     exploreMap: "Explore map",
   },
 

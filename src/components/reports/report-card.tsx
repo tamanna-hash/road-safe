@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPin, Calendar, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, SeverityBadge, CategoryBadge, VerifiedIndicator } from "@/components/shared/badges";
 import { useLocalizedReport } from "@/hooks/use-localized-report";
@@ -22,8 +23,14 @@ function formatDate(iso: string, lang: string): string {
 }
 
 export function ReportCard({ report, onClick, isSelected }: ReportCardProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const { title, address, adminNote } = useLocalizedReport(report);
+  const router = useRouter();
+
+  const handleSeeOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/explore?id=${report.id}`);
+  };
 
   return (
     <Card
@@ -52,17 +59,29 @@ export function ReportCard({ report, onClick, isSelected }: ReportCardProps) {
           <CategoryBadge category={report.category} />
         </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {address && (
-            <span className="flex items-center gap-1 truncate max-w-[200px]">
-              <MapPin className="size-3 shrink-0" />
-              <span className="truncate">{address}</span>
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {address && (
+              <span className="flex items-center gap-1 truncate max-w-[200px]">
+                <MapPin className="size-3 shrink-0" />
+                <span className="truncate">{address}</span>
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Calendar className="size-3 shrink-0" />
+              {formatDate(report.submittedAt, lang)}
             </span>
-          )}
-          <span className="flex items-center gap-1">
-            <Calendar className="size-3 shrink-0" />
-            {formatDate(report.submittedAt, lang)}
-          </span>
+          </div>
+
+          {/* See on map */}
+          <button
+            type="button"
+            onClick={handleSeeOnMap}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors shrink-0"
+          >
+            <MapPin className="size-3" />
+            {t.common.seeOnMap}
+          </button>
         </div>
 
         {adminNote && (

@@ -55,11 +55,6 @@ export function MyReportsView() {
           description={t.myReports.pageDesc}
           action={
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/explore" />} className="gap-1.5">
-                <MapPin className="size-3.5" />
-                <span className="hidden sm:inline">{t.myReports.viewOnMap}</span>
-                <span className="sm:hidden">{t.common.map}</span>
-              </Button>
               <Button size="sm" nativeButton={false} render={<Link href="/report" />} className="gap-1.5">
                 <AlertTriangle className="size-3.5" />
                 <span className="hidden sm:inline">{t.myReports.newReport}</span>
